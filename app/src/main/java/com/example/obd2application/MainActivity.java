@@ -4,6 +4,7 @@ import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -12,8 +13,14 @@ import android.widget.Toast;
 import com.github.pires.obd.commands.ObdCommand;
 import com.github.pires.obd.commands.SpeedCommand;
 import com.github.pires.obd.commands.engine.RPMCommand;
+import com.github.pires.obd.commands.fuel.ConsumptionRateCommand;
+import com.github.pires.obd.commands.fuel.FuelLevelCommand;
+import com.github.pires.obd.commands.protocol.AvailablePidsCommand;
 import com.github.pires.obd.commands.protocol.AvailablePidsCommand_01_20;
+import com.github.pires.obd.commands.protocol.AvailablePidsCommand_21_40;
+import com.github.pires.obd.commands.protocol.AvailablePidsCommand_41_60;
 import com.github.pires.obd.commands.protocol.EchoOffCommand;
+import com.github.pires.obd.commands.protocol.ObdRawCommand;
 import com.github.pires.obd.commands.protocol.ObdResetCommand;
 import com.github.pires.obd.commands.protocol.ObdWarmstartCommand;
 import com.github.pires.obd.commands.protocol.SelectProtocolCommand;
@@ -24,10 +31,12 @@ import com.github.pires.obd.enums.ObdProtocols;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.net.Socket;
 
 public class MainActivity extends AppCompatActivity {
 
+    TextView[] textViewArray;
     Obd2Task obd2Task;
     boolean isToggleButtonOn;
 
@@ -36,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        textViewArray = new TextView[] {};
         obd2Task = null;
         isToggleButtonOn = false;
     }
@@ -53,24 +63,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void updateProgress(String... values) {
-        TextView statusTextView = findViewById(R.id.statusTextView);
-        statusTextView.setText(values[0]);
-
-        TextView vehicleSpeedValueTextView = findViewById(R.id.vehicleSpeedValueTextView);
-        vehicleSpeedValueTextView.setText(values[1]);
-
-        TextView engineRpmValueTextView = findViewById(R.id.engineRpmValueTextView);
-        engineRpmValueTextView.setText(values[2]);
-
-        TextView engineCoolantTemperatureValueTextView = findViewById(R.id.engineCoolantTemperatureValueTextView);
-        engineCoolantTemperatureValueTextView.setText(values[3]);
+    public void updateProgress(Pair<Integer, String>... values) {
+        for (int v=0; v<values.length; v++) {
+            TextView textView = findViewById(values[v].first);
+            textView.setText(values[v].second);
+        }
 
         TextView currentTimeMillisValueTextView = findViewById(R.id.currentTimeMillisValueTextView);
-        currentTimeMillisValueTextView.setText(values[4]);
+        currentTimeMillisValueTextView.setText(String.valueOf(System.currentTimeMillis()));
     }
 
-    private class Obd2Task extends AsyncTask<String, String, String> {
+    private class Obd2Task extends AsyncTask<String, Pair<Integer, String>, String> {
 
         MainActivity mainActivity;
         private OutputStream outputStream;
@@ -89,68 +92,99 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(String... strings) {
-            publishProgress("STATUS", "wait", "wait", "wait", String.valueOf(System.currentTimeMillis()));
+            publishProgress(new Pair<Integer, String>(R.id.statusTextView, "WAIT0"));
             try {
                 Socket socket = new Socket("192.168.0.10", 35000);
                 outputStream = socket.getOutputStream();
                 inputStream = socket.getInputStream();
 
                 ObdResetCommand obdResetCommand = new ObdResetCommand();//ObdWarmstartCommand obdWarmstartCommand = new ObdWarmstartCommand();
-                String obdResetCommandResult = runCommand(obdResetCommand);
-                publishProgress(obdResetCommandResult, "wait1", "wait1", "wait1", String.valueOf(System.currentTimeMillis()));
-                Thread.sleep(250);
+                String obdResetCommandResult = runCommand(obdResetCommand, R.id.statusTextView);
 
                 SelectProtocolCommand selectProtocolCommand = new SelectProtocolCommand(ObdProtocols.AUTO);
-                String selectProtocolCommandResult = runCommand(selectProtocolCommand);
-                publishProgress(selectProtocolCommandResult, "wait2", "wait2", "wait2", String.valueOf(System.currentTimeMillis()));
-                Thread.sleep(250);
+                String selectProtocolCommandResult = runCommand(selectProtocolCommand, R.id.statusTextView);
 
                 EchoOffCommand echoOffCommand = new EchoOffCommand();
-                String echoOffCommandResult = runCommand(echoOffCommand);
-                publishProgress(selectProtocolCommandResult, "wait3", "wait3", "wait3", String.valueOf(System.currentTimeMillis()));
+                String echoOffCommandResult = runCommand(echoOffCommand, R.id.statusTextView);
 
-//                AvailablePidsCommand_01_20 availablePidsCommand_01_20 = new AvailablePidsCommand_01_20();
-//                String availablePidsCommand_01_20Result = runCommand(availablePidsCommand_01_20);
-//                publishProgress(availablePidsCommand_01_20Result, "wait3", "wait3", "wait3", String.valueOf(System.currentTimeMillis()));
-//                Thread.sleep(250);
+                runAvailablePidsCommands();
 
                 while (!isCancelled()) {
-                    Thread.sleep(1000);
+                    //Thread.sleep(1000);
 
                     SpeedCommand vehicleSpeedCommand = new SpeedCommand();
-                    String vehicleSpeedCommandResult = runCommand(vehicleSpeedCommand);
+                    String vehicleSpeedCommandResult = runCommand(vehicleSpeedCommand, R.id.vehicleSpeedValueTextView);
 
                     RPMCommand engineRpmCommand = new RPMCommand();
-                    String engineRPMCommandResult = runCommand(engineRpmCommand);
+                    String engineRPMCommandResult = runCommand(engineRpmCommand, R.id.engineRpmValueTextView);
 
                     EngineCoolantTemperatureCommand engineCoolantTemperatureCommand = new EngineCoolantTemperatureCommand();
-                    String engineCoolantTemperatureCommandResult = runCommand(engineCoolantTemperatureCommand);
+                    String engineCoolantTemperatureCommandResult = runCommand(engineCoolantTemperatureCommand, R.id.engineCoolantTemperatureValueTextView);
 
-                    publishProgress("STATUS", vehicleSpeedCommandResult, engineRPMCommandResult, engineCoolantTemperatureCommandResult, String.valueOf(System.currentTimeMillis()));
-                    //publishProgress("STATUS", "testing 0", "testing 1", "testing 2", String.valueOf(System.currentTimeMillis()));
-                    //publishProgress("STATUS", "wait", "wait", engineCoolantTemperatureCommandResult, String.valueOf(System.currentTimeMillis()));
+                    FuelLevelCommand fuelTankInputLevelCommand = new FuelLevelCommand();
+                    String fuelTankInputLevelCommandResult = runCommand(fuelTankInputLevelCommand, R.id.fuelTankLevelInputValueTextView);
+
+                    ConsumptionRateCommand engineFuelRateCommand = new ConsumptionRateCommand();
+                    String engineFuelRateCommandResult = runCommand(engineFuelRateCommand, R.id.engineFuelRateValueTextView);
                 }
             } catch (Exception e) {
-                publishProgress("EXCEPTION", "EXCEPTION", "EXCEPTION", "EXCEPTION", String.valueOf(System.currentTimeMillis()));
+                publishProgress(new Pair<Integer, String>(R.id.statusTextView, e.getMessage()));
                 Log.e("example.app", e.getMessage());
             }
             return null;
         }
 
-        private String runCommand(ObdCommand obdCommand) {
+        private void runAvailablePidsCommands() {
+            ObdCommand[] availablePidsCommands = new ObdCommand[] {
+                    //new AvailablePidsCommand_01_20(),
+                    //new AvailablePidsCommand_21_40(),
+                    //new AvailablePidsCommand_41_60(),
+                    new ObdRawCommand("01 00"),
+                    new ObdRawCommand("01 20"),
+                    new ObdRawCommand("01 40"),
+                    new ObdRawCommand("01 60"),
+                    new ObdRawCommand("01 80"),
+                    new ObdRawCommand("01 A0"),
+                    new ObdRawCommand("01 C0"),
+                    new ObdRawCommand("01 E0"),
+            };
+            Integer[] valueTextViewIds = new Integer[] {
+                    R.id.pidsSupported_01_20_ValuesTextView,
+                    R.id.pidsSupported_21_40_ValuesTextView,
+                    R.id.pidsSupported_41_60_ValuesTextView,
+                    R.id.pidsSupported_61_80_ValuesTextView,
+                    R.id.pidsSupported_81_A0_ValuesTextView,
+                    R.id.pidsSupported_A1_C0_ValuesTextView,
+                    R.id.pidsSupported_C1_E0_ValuesTextView,
+                    R.id.pidsSupported_E1_00_ValuesTextView
+            };
+
+            for (int b=0; b<availablePidsCommands.length; b++) {
+                String obdCommandResult = runCommand(availablePidsCommands[b], valueTextViewIds[b]);
+                String obdCommandResultBinary = new BigInteger(obdCommandResult.substring(obdCommandResult.length() - 8), 16).toString(2);
+                String obdCommandResultBinaryLeadingZeros = ("00000000000000000000000000000000" + obdCommandResultBinary).substring(obdCommandResultBinary.length());
+                if (obdCommandResultBinaryLeadingZeros.charAt(31) == '0') {
+                    break;
+                }
+            }
+        }
+
+        private String runCommand(ObdCommand obdCommand, int valueTextViewId) {
             String obdCommandResult;
             try {
+                publishProgress(new Pair<Integer, String>(R.id.statusTextView, "Running " + obdCommand.getName()));
                 obdCommand.run(inputStream, outputStream);
                 //obdCommandResult = obdCommand.getResult();
                 obdCommandResult = obdCommand.getFormattedResult();//requires turning echo off
             } catch (Exception e) {
                 obdCommandResult = e.getMessage();
             }
+            publishProgress(new Pair<Integer, String>(valueTextViewId, obdCommandResult));
             return obdCommandResult;
         }
 
         @Override
-        protected void onProgressUpdate(String... values) {
+        protected void onProgressUpdate(Pair<Integer, String>... values) {
             mainActivity.updateProgress(values);
         }
     }
