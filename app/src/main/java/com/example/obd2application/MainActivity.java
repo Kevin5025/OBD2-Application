@@ -163,7 +163,9 @@ public class MainActivity extends AppCompatActivity {
                 String obdCommandResult = runCommand(availablePidsCommands[b], valueTextViewIds[b]);
                 String obdCommandResultBinary = new BigInteger(obdCommandResult.substring(obdCommandResult.length() - 8), 16).toString(2);
                 String obdCommandResultBinaryLeadingZeros = ("00000000000000000000000000000000" + obdCommandResultBinary).substring(obdCommandResultBinary.length());
-                if (obdCommandResultBinaryLeadingZeros.charAt(31) == '0') {
+                String obdCommandResult2Binary = new BigInteger(obdCommandResult.substring(4, 12), 16).toString(2);//sometimes the obd2 scanner returns two sets of results (concatenated) for some reason
+                String obdCommandResult2BinaryLeadingZeros = ("00000000000000000000000000000000" + obdCommandResult2Binary).substring(obdCommandResult2Binary.length());
+                if (obdCommandResultBinaryLeadingZeros.charAt(31) == '0' && obdCommandResult2BinaryLeadingZeros.charAt(31) == '0') {
                     break;
                 }
             }
