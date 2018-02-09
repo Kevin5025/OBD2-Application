@@ -10,45 +10,42 @@
         android:id="@+id/toggleButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="444dp"
+        android:layout_marginBottom="16dp"
         android:onClick="onToggleButtonClick"
         android:text="Toggle"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintRight_toRightOf="parent" />
 
     <TextView
         android:id="@+id/vehicleSpeedTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
         android:text="Vehicle Speed"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/engineRpmValueTextView" />
 
     <TextView
         android:id="@+id/engineRpmTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
         android:text="Engine Rpm"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/vehicleSpeedTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/intakeManifoldAbsolutePressureValueTextView" />
 
     <TextView
         android:id="@+id/engineCoolantTemperatureTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
         android:text="Engine Coolant Temperature"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/engineRpmTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/calculatedEngineLoadValueTextView" />
 
     <TextView
         android:id="@+id/vehicleSpeedValueTextView"
@@ -89,7 +86,7 @@
         android:layout_marginTop="16dp"
         android:text="Current Time Millis"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/engineFuelRateTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/statusTextView" />
 
     <TextView
         android:id="@+id/currentTimeMillisValueTextView"
@@ -108,27 +105,16 @@
         android:text="STATUS"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/currentTimeMillisTextView" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/fuelTankLevelInputTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
         android:text="Fuel Tank Input Level"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/engineCoolantTemperatureTextView" />
-
-    <TextView
-        android:id="@+id/engineFuelRateTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
-        android:text="Engine Fuel Rate"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/fuelTankLevelInputTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/intakeAirTemperatureValueTextView" />
 
     <TextView
         android:id="@+id/fuelTankLevelInputValueTextView"
@@ -139,95 +125,117 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/fuelTankLevelInputTextView" />
 
+    <Button
+        android:id="@+id/pidsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginLeft="16dp"
+        android:onClick="onPidsButtonClick"
+        android:text="PIDs"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
     <TextView
-        android:id="@+id/engineFuelRateValueTextView"
+        android:id="@+id/debugTextViewB"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="DEBUG"
+        app:layout_constraintBottom_toTopOf="@+id/toggleButton"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <Button
+        android:id="@+id/debugButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="16dp"
+        android:onClick="onDebugButtonClick"
+        android:text="DEBUG"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/calculatedEngineLoadTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:text="Calculated Engine Load"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/currentTimeMillisValueTextView" />
+
+    <TextView
+        android:id="@+id/calculatedEngineLoadValueTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginRight="16dp"
         android:text="-1"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/engineFuelRateTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/calculatedEngineLoadTextView" />
 
     <TextView
-        android:id="@+id/pidsSupportedTextView"
+        android:id="@+id/intakeManifoldAbsolutePressureTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
-        android:text="PIDs Supported "
+        android:text="Intake Manifold Absolute Pressure"
         app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/engineCoolantTemperatureValueTextView" />
+
+    <TextView
+        android:id="@+id/intakeManifoldAbsolutePressureValueTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="16dp"
+        android:text="-1"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/intakeManifoldAbsolutePressureTextView" />
+
+    <TextView
+        android:id="@+id/intakeAirTemperatureTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:text="Intake Air Temperature"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/vehicleSpeedValueTextView" />
+
+    <TextView
+        android:id="@+id/intakeAirTemperatureValueTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="16dp"
+        android:text="-1"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/intakeAirTemperatureTextView" />
+
+    <TextView
+        android:id="@+id/ambientAirTemperatureTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:text="Ambient Air Temperature"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fuelTankLevelInputValueTextView" />
+
+    <TextView
+        android:id="@+id/ambientAirTemperatureValueTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="16dp"
+        android:text="-1"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ambientAirTemperatureTextView" />
+
+    <TextView
+        android:id="@+id/commandTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="COMMAND"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/statusTextView" />
-
-    <TextView
-        android:id="@+id/pidsSupported_01_20_ValuesTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:text="00000000"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pidsSupportedTextView" />
-
-    <TextView
-        android:id="@+id/pidsSupported_21_40_ValuesTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="00000000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pidsSupported_01_20_ValuesTextView" />
-
-    <TextView
-        android:id="@+id/pidsSupported_41_60_ValuesTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="00000000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pidsSupported_21_40_ValuesTextView" />
-
-    <TextView
-        android:id="@+id/pidsSupported_61_80_ValuesTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="00000000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pidsSupported_41_60_ValuesTextView" />
-
-    <TextView
-        android:id="@+id/pidsSupported_81_A0_ValuesTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:text="00000000"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pidsSupported_61_80_ValuesTextView" />
-
-    <TextView
-        android:id="@+id/pidsSupported_A1_C0_ValuesTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="00000000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pidsSupported_81_A0_ValuesTextView" />
-
-    <TextView
-        android:id="@+id/pidsSupported_C1_E0_ValuesTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="00000000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pidsSupported_A1_C0_ValuesTextView" />
-
-    <TextView
-        android:id="@+id/pidsSupported_E1_00_ValuesTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="00000000"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pidsSupported_C1_E0_ValuesTextView" />
 
 </android.support.constraint.ConstraintLayout>

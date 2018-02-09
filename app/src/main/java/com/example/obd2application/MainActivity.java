@@ -1,44 +1,40 @@
 package com.example.obd2application;
 
-import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.pires.obd.commands.ObdCommand;
 import com.github.pires.obd.commands.SpeedCommand;
+import com.github.pires.obd.commands.engine.LoadCommand;
 import com.github.pires.obd.commands.engine.RPMCommand;
-import com.github.pires.obd.commands.fuel.ConsumptionRateCommand;
 import com.github.pires.obd.commands.fuel.FuelLevelCommand;
-import com.github.pires.obd.commands.protocol.AvailablePidsCommand;
-import com.github.pires.obd.commands.protocol.AvailablePidsCommand_01_20;
-import com.github.pires.obd.commands.protocol.AvailablePidsCommand_21_40;
-import com.github.pires.obd.commands.protocol.AvailablePidsCommand_41_60;
-import com.github.pires.obd.commands.protocol.EchoOffCommand;
-import com.github.pires.obd.commands.protocol.ObdRawCommand;
-import com.github.pires.obd.commands.protocol.ObdResetCommand;
-import com.github.pires.obd.commands.protocol.ObdWarmstartCommand;
-import com.github.pires.obd.commands.protocol.SelectProtocolCommand;
+import com.github.pires.obd.commands.pressure.IntakeManifoldPressureCommand;
+import com.github.pires.obd.commands.temperature.AirIntakeTemperatureCommand;
+import com.github.pires.obd.commands.temperature.AmbientAirTemperatureCommand;
 import com.github.pires.obd.commands.temperature.EngineCoolantTemperatureCommand;
-import com.github.pires.obd.enums.AvailableCommandNames;
-import com.github.pires.obd.enums.ObdProtocols;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.math.BigInteger;
-import java.net.Socket;
+import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Obd2Activity {
 
     TextView[] textViewArray;
-    Obd2Task obd2Task;
+    Obd2StreamTask obd2StreamTask;
     boolean isToggleButtonOn;
+
+    public static String allAvailablePidsBinary;//includes PID 00
+    public static String[] allAvailablePidsHexResult;//excludes PID 00
+    public static boolean allAvailablePidsKnown;
+//    public static final String ALL_AVAILABLE_PIDS_BINARY_KEY = "com.example.obd2application.ALL_AVAILABLE_PIDS_BINARY_KEY";
+//    public static final String ALL_AVAILABLE_PIDS_HEX_RESULT_KEY = "com.example.obd2application.ALL_AVAILABLE_PIDS_HEX_RESULT_KEY";
+    public static final int PIDS_ACTIVITY_REQUEST_CODE = 1;
+
+    ArrayList<Integer> obdCommandTextViewIdArrayList = new ArrayList<Integer>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,86 +42,74 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         textViewArray = new TextView[] {};
-        obd2Task = null;
+        obd2StreamTask = null;
         isToggleButtonOn = false;
+        allAvailablePidsBinary = "1";//because PID 00 is always available
+        allAvailablePidsHexResult = new String[8];
+        allAvailablePidsKnown = false;
+
+        findViewById(R.id.toggleButton).setEnabled(false);//until available PIDs are known
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch(requestCode) {
+            case (PIDS_ACTIVITY_REQUEST_CODE) : {
+                if (resultCode == Activity.RESULT_OK && allAvailablePidsKnown) {
+                    //e.g. String returnValue = data.getStringExtra("some_key");
+                    findViewById(R.id.toggleButton).setEnabled(true);//now available PIDs are known
+                }
+                break;
+            }
+        }
+    }
+
+    public void onPidsButtonClick(View view) {
+        Intent intent = new Intent(this, PidsActivity.class);
+//        intent.putExtra(ALL_AVAILABLE_PIDS_BINARY_KEY, allAvailablePidsBinary);
+//        intent.putExtra(ALL_AVAILABLE_PIDS_HEX_RESULT_KEY, allAvailablePidsHexResult);
+        startActivityForResult(intent, PIDS_ACTIVITY_REQUEST_CODE);
     }
 
     public void onToggleButtonClick(View view) {
         isToggleButtonOn = !isToggleButtonOn;
         if (isToggleButtonOn) {
             Toast.makeText(this, "Toggle Is On", Toast.LENGTH_SHORT).show();
-            obd2Task = new Obd2Task(this);
-            obd2Task.execute();
+            obd2StreamTask = new Obd2StreamTask(this);
+            obd2StreamTask.execute();
         } else {
             Toast.makeText(this, "Toggle Is Off", Toast.LENGTH_SHORT).show();
-            obd2Task.cancel(false);
-            obd2Task = null;
+            obd2StreamTask.cancel(false);
+            obd2StreamTask = null;
         }
     }
 
-    public void updateProgress(Pair<Integer, String>... values) {
-        for (int v=0; v<values.length; v++) {
-            TextView textView = findViewById(values[v].first);
-            textView.setText(values[v].second);
-        }
-
-        TextView currentTimeMillisValueTextView = findViewById(R.id.currentTimeMillisValueTextView);
-        currentTimeMillisValueTextView.setText(String.valueOf(System.currentTimeMillis()));
+    public void onDebugButtonClick(View view) {
+        updateProgress(new Pair<Integer, String>(R.id.debugTextViewB, allAvailablePidsBinary));
     }
 
-    private class Obd2Task extends AsyncTask<String, Pair<Integer, String>, String> {
+    private class Obd2StreamTask extends Obd2AsyncTask {
 
-        MainActivity mainActivity;
-        private OutputStream outputStream;
-        private InputStream inputStream;
-
-        public Obd2Task(MainActivity mainActivity) {
-            this.mainActivity = mainActivity;
-//            try {
-//                Socket socket = new Socket("192.168.0.10", 35000);
-//                outputStream = socket.getOutputStream();
-//                inputStream = socket.getInputStream();
-//            } catch (Exception e) {
-//                Log.e("example.app", e.getMessage());
-//            }
+        public Obd2StreamTask(Obd2Activity obd2Activity) {
+            super(obd2Activity);
         }
 
         @Override
         protected String doInBackground(String... strings) {
-            publishProgress(new Pair<Integer, String>(R.id.statusTextView, "WAIT0"));
             try {
-                Socket socket = new Socket("192.168.0.10", 35000);
-                outputStream = socket.getOutputStream();
-                inputStream = socket.getInputStream();
+                initializeObd2();
 
-                ObdResetCommand obdResetCommand = new ObdResetCommand();//ObdWarmstartCommand obdWarmstartCommand = new ObdWarmstartCommand();
-                String obdResetCommandResult = runCommand(obdResetCommand, R.id.statusTextView);
-
-                SelectProtocolCommand selectProtocolCommand = new SelectProtocolCommand(ObdProtocols.AUTO);
-                String selectProtocolCommandResult = runCommand(selectProtocolCommand, R.id.statusTextView);
-
-                EchoOffCommand echoOffCommand = new EchoOffCommand();
-                String echoOffCommandResult = runCommand(echoOffCommand, R.id.statusTextView);
-
-                runAvailablePidsCommands();
-
+                ArrayList<ObdCommand> obdCommands = getAvailableCommands();
+//                ConsumptionRateCommand engineFuelRateCommand = new ConsumptionRateCommand();
+//                engineFuelRateCommand.setMaxNumberResponses(1);
                 while (!isCancelled()) {
-                    //Thread.sleep(1000);
-
-                    SpeedCommand vehicleSpeedCommand = new SpeedCommand();
-                    String vehicleSpeedCommandResult = runCommand(vehicleSpeedCommand, R.id.vehicleSpeedValueTextView);
-
-                    RPMCommand engineRpmCommand = new RPMCommand();
-                    String engineRPMCommandResult = runCommand(engineRpmCommand, R.id.engineRpmValueTextView);
-
-                    EngineCoolantTemperatureCommand engineCoolantTemperatureCommand = new EngineCoolantTemperatureCommand();
-                    String engineCoolantTemperatureCommandResult = runCommand(engineCoolantTemperatureCommand, R.id.engineCoolantTemperatureValueTextView);
-
-                    FuelLevelCommand fuelTankInputLevelCommand = new FuelLevelCommand();
-                    String fuelTankInputLevelCommandResult = runCommand(fuelTankInputLevelCommand, R.id.fuelTankLevelInputValueTextView);
-
-                    ConsumptionRateCommand engineFuelRateCommand = new ConsumptionRateCommand();
-                    String engineFuelRateCommandResult = runCommand(engineFuelRateCommand, R.id.engineFuelRateValueTextView);
+                    publishProgress(new Pair<Integer, String>(R.id.statusTextView, "SLEEPING"));
+                    Thread.sleep(2000 - System.currentTimeMillis()%2000);
+                    for (int oc=0; oc<obdCommands.size(); oc++) {
+                        runCommand(obdCommands.get(oc), obdCommandTextViewIdArrayList.get(oc));
+                    }
+//                    String engineFuelRateCommandResult = runCommand(engineFuelRateCommand, R.id.engineFuelRateValueTextView);
                 }
             } catch (Exception e) {
                 publishProgress(new Pair<Integer, String>(R.id.statusTextView, e.getMessage()));
@@ -134,60 +118,61 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
 
-        private void runAvailablePidsCommands() {
-            ObdCommand[] availablePidsCommands = new ObdCommand[] {
-                    //new AvailablePidsCommand_01_20(),
-                    //new AvailablePidsCommand_21_40(),
-                    //new AvailablePidsCommand_41_60(),
-                    new ObdRawCommand("01 00"),
-                    new ObdRawCommand("01 20"),
-                    new ObdRawCommand("01 40"),
-                    new ObdRawCommand("01 60"),
-                    new ObdRawCommand("01 80"),
-                    new ObdRawCommand("01 A0"),
-                    new ObdRawCommand("01 C0"),
-                    new ObdRawCommand("01 E0"),
-            };
-            Integer[] valueTextViewIds = new Integer[] {
-                    R.id.pidsSupported_01_20_ValuesTextView,
-                    R.id.pidsSupported_21_40_ValuesTextView,
-                    R.id.pidsSupported_41_60_ValuesTextView,
-                    R.id.pidsSupported_61_80_ValuesTextView,
-                    R.id.pidsSupported_81_A0_ValuesTextView,
-                    R.id.pidsSupported_A1_C0_ValuesTextView,
-                    R.id.pidsSupported_C1_E0_ValuesTextView,
-                    R.id.pidsSupported_E1_00_ValuesTextView
-            };
+        protected ArrayList<ObdCommand> getAvailableCommands() {
+            ArrayList<ObdCommand> obdCommands = new ArrayList<>();
 
-            for (int b=0; b<availablePidsCommands.length; b++) {
-                String obdCommandResult = runCommand(availablePidsCommands[b], valueTextViewIds[b]);
-                String obdCommandResultBinary = new BigInteger(obdCommandResult.substring(obdCommandResult.length() - 8), 16).toString(2);
-                String obdCommandResultBinaryLeadingZeros = ("00000000000000000000000000000000" + obdCommandResultBinary).substring(obdCommandResultBinary.length());
-                String obdCommandResult2Binary = new BigInteger(obdCommandResult.substring(4, 12), 16).toString(2);//sometimes the obd2 scanner returns two sets of results (concatenated) for some reason
-                String obdCommandResult2BinaryLeadingZeros = ("00000000000000000000000000000000" + obdCommandResult2Binary).substring(obdCommandResult2Binary.length());
-                if (obdCommandResultBinaryLeadingZeros.charAt(31) == '0' && obdCommandResult2BinaryLeadingZeros.charAt(31) == '0') {
-                    break;
-                }
+            //Eventually COULDDO: dynamically generate the TextViews
+            //Eventually COULDDO: map the PIDs to ObdCommands
+            if (MainActivity.allAvailablePidsBinary.length() >= 5 && MainActivity.allAvailablePidsBinary.charAt(4) == '1') {
+                LoadCommand calculatedEngineLoadCommand = new LoadCommand();
+                calculatedEngineLoadCommand.setMaxNumberResponses(1);
+                obdCommands.add(calculatedEngineLoadCommand);
+                obdCommandTextViewIdArrayList.add(R.id.calculatedEngineLoadValueTextView);
             }
-        }
-
-        private String runCommand(ObdCommand obdCommand, int valueTextViewId) {
-            String obdCommandResult;
-            try {
-                publishProgress(new Pair<Integer, String>(R.id.statusTextView, "Running " + obdCommand.getName()));
-                obdCommand.run(inputStream, outputStream);
-                //obdCommandResult = obdCommand.getResult();
-                obdCommandResult = obdCommand.getFormattedResult();//requires turning echo off
-            } catch (Exception e) {
-                obdCommandResult = e.getMessage();
+            if (MainActivity.allAvailablePidsBinary.length() >= 6 && MainActivity.allAvailablePidsBinary.charAt(5) == '1') {
+                EngineCoolantTemperatureCommand engineCoolantTemperatureCommand = new EngineCoolantTemperatureCommand();
+                engineCoolantTemperatureCommand.setMaxNumberResponses(1);
+                obdCommands.add(engineCoolantTemperatureCommand);
+                obdCommandTextViewIdArrayList.add(R.id.engineCoolantTemperatureValueTextView);
             }
-            publishProgress(new Pair<Integer, String>(valueTextViewId, obdCommandResult));
-            return obdCommandResult;
-        }
+            if (MainActivity.allAvailablePidsBinary.length() >= 12 && MainActivity.allAvailablePidsBinary.charAt(11) == '1') {
+                IntakeManifoldPressureCommand intakeManifoldAbsolutePressureCommand = new IntakeManifoldPressureCommand();
+                intakeManifoldAbsolutePressureCommand.setMaxNumberResponses(1);
+                obdCommands.add(intakeManifoldAbsolutePressureCommand);
+                obdCommandTextViewIdArrayList.add(R.id.intakeManifoldAbsolutePressureValueTextView);
+            }
+            if (MainActivity.allAvailablePidsBinary.length() >= 13 && MainActivity.allAvailablePidsBinary.charAt(12) == '1') {
+                RPMCommand engineRpmCommand = new RPMCommand();
+                engineRpmCommand.setMaxNumberResponses(1);
+                obdCommands.add(engineRpmCommand);
+                obdCommandTextViewIdArrayList.add(R.id.engineRpmValueTextView);
+            }
+            if (MainActivity.allAvailablePidsBinary.length() >= 14 && MainActivity.allAvailablePidsBinary.charAt(13) == '1') {
+                SpeedCommand vehicleSpeedCommand = new SpeedCommand();
+                vehicleSpeedCommand.setMaxNumberResponses(1);
+                obdCommands.add(vehicleSpeedCommand);
+                obdCommandTextViewIdArrayList.add(R.id.vehicleSpeedValueTextView);
+            }
+            if (MainActivity.allAvailablePidsBinary.length() >= 16 && MainActivity.allAvailablePidsBinary.charAt(15) == '1') {
+                AirIntakeTemperatureCommand intakeAirTemperatureCommand = new AirIntakeTemperatureCommand();
+                intakeAirTemperatureCommand.setMaxNumberResponses(1);
+                obdCommands.add(intakeAirTemperatureCommand);
+                obdCommandTextViewIdArrayList.add(R.id.intakeAirTemperatureValueTextView);
+            }
+            if (MainActivity.allAvailablePidsBinary.length() >= 48 && MainActivity.allAvailablePidsBinary.charAt(47) == '1') {
+                FuelLevelCommand fuelTankInputLevelCommand = new FuelLevelCommand();
+                fuelTankInputLevelCommand.setMaxNumberResponses(1);
+                obdCommands.add(fuelTankInputLevelCommand);
+                obdCommandTextViewIdArrayList.add(R.id.fuelTankLevelInputValueTextView);
+            }
+            if (MainActivity.allAvailablePidsBinary.length() >= 71 && MainActivity.allAvailablePidsBinary.charAt(70) == '1') {
+                AmbientAirTemperatureCommand ambientAirTemperatureCommand = new AmbientAirTemperatureCommand();
+                ambientAirTemperatureCommand.setMaxNumberResponses(1);
+                obdCommands.add(ambientAirTemperatureCommand);
+                obdCommandTextViewIdArrayList.add(R.id.ambientAirTemperatureValueTextView);
+            }
 
-        @Override
-        protected void onProgressUpdate(Pair<Integer, String>... values) {
-            mainActivity.updateProgress(values);
+            return obdCommands;
         }
     }
 }
