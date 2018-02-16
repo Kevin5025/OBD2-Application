@@ -2,7 +2,12 @@ package com.example.obd2application;
 
 import android.support.v7.app.AppCompatActivity;
 import android.util.Pair;
+import android.view.View;
 import android.widget.TextView;
+
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
 
 /**
  * Created by linkk on 2/6/2018.
@@ -16,9 +21,22 @@ public class Obd2Activity extends AppCompatActivity {
                 continue;
             }
 
-            TextView textView = findViewById(values[v].first);
-            if (textView != null) {
-                textView.setText(values[v].second);
+            View viewById = findViewById(values[v].first);
+            if (viewById != null) {
+                Class<?> viewClass = viewById.getClass();
+                if (TextView.class.isAssignableFrom(viewClass)) {
+                    TextView textView = (TextView) viewById;
+                    textView.setText(values[v].second);
+                } else if (GraphView.class.isAssignableFrom(viewClass)) {
+                    GraphView graphView = (GraphView) viewById;
+                    LineGraphSeries<DataPoint> lineGraphSeries = (LineGraphSeries<DataPoint>) graphView.getSeries().get(0);
+                    double currentTimeSeconds = (double) System.currentTimeMillis()/1000%10000;
+                    lineGraphSeries.appendData(new DataPoint(currentTimeSeconds, Double.valueOf(values[v].second)), true, 20);
+                    graphView.getViewport().setMaxX(currentTimeSeconds);
+                    graphView.getViewport().setMinX(currentTimeSeconds - 40);
+//                    graphView.removeAllSeries();
+//                    graphView.addSeries(lineGraphSeries);
+                }
             }
         }
         TextView currentTimeMillisValueTextView = findViewById(R.id.currentTimeMillisValueTextView);

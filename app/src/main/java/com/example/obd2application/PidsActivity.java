@@ -5,11 +5,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
+import android.view.View;
+import android.widget.CheckBox;
 
 import com.github.pires.obd.commands.ObdCommand;
 import com.github.pires.obd.commands.protocol.ObdRawCommand;
 
 import java.math.BigInteger;
+import java.util.concurrent.ExecutionException;
 
 public class PidsActivity extends Obd2Activity {
 
@@ -24,6 +27,17 @@ public class PidsActivity extends Obd2Activity {
             R.id.pidsSupported_E1_00_ValueTextView
     };
 
+    Integer[] commandCheckBoxIds = new Integer[] {
+            R.id.calculatedEngineLoadCheckBox,
+            R.id.engineCoolantTemperatureCheckBox,
+            R.id.intakeManifoldAbsolutePressureCheckBox,
+            R.id.engineRpmCheckBox,
+            R.id.vehicleSpeedCheckBox,
+            R.id.intakeAirTemperatureCheckBox,
+            R.id.fuelTankInputLevelCheckBox,
+            R.id.ambientAirTemperatureCheckBox
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,32 +47,107 @@ public class PidsActivity extends Obd2Activity {
 //        String allAvailablePidsBinary = intent.getStringExtra(MainActivity.ALL_AVAILABLE_PIDS_BINARY_KEY);
 //        String[] allAvailablePidsHexResult = intent.getStringArrayExtra(MainActivity.ALL_AVAILABLE_PIDS_HEX_RESULT_KEY);
 
-        if (!MainActivity.allAvailablePidsKnown) {
+        if (!MainActivity.isKnownAllAvailablePids) {
             Obd2AvailablePidsTask obd2AvailablePidsTask = new Obd2AvailablePidsTask(this);
-            obd2AvailablePidsTask.execute();
+            try {
+                obd2AvailablePidsTask.execute().get();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            pruneWantedAvailablePidsHex();
+            disableUnavailablePidCommandCheckBoxes();
+            checkWantedCommandCheckBoxes();
+            MainActivity.isKnownAllAvailablePids = true;
+            Intent resultIntent = new Intent();
+            //resultIntent.putExtra("WantedAvailablePidsBytes", getWantedAvailablePidsHex());
+            //MainActivity.wantedAvailablePidsHex = getWantedAvailablePidsHex();
+            setResult(Activity.RESULT_OK, resultIntent);
+            //finish();
         } else {
             for (int b=0; b<MainActivity.allAvailablePidsHexResult.length; b++) {
                 updateProgress(new Pair<Integer, String>(pidsSupportedValueTextViewIds[b], MainActivity.allAvailablePidsHexResult[b]));
             }
+            disableUnavailablePidCommandCheckBoxes();
+            checkWantedCommandCheckBoxes();
         }
+    }
+
+    public void onCommandCheckBoxClick(View view) {
+        MainActivity.wantedAvailablePidsHex = getWantedAvailablePidsHex();
+    }
+
+    private void pruneWantedAvailablePidsHex() {
+        StringBuilder wantedAvailablePidsHexStringBuilder = new StringBuilder();
+        String[] wantedAvailablePidsHexArray = MainActivity.wantedAvailablePidsHex.split(" ");
+        for (int wp=0; wp<wantedAvailablePidsHexArray.length; wp++) {
+            int wantedAvailablePidDec = Integer.parseInt(wantedAvailablePidsHexArray[wp], 16);
+            if (wantedAvailablePidDec < MainActivity.allAvailablePidsBinary.length() && MainActivity.allAvailablePidsBinary.charAt(wantedAvailablePidDec) == '1') {
+                wantedAvailablePidsHexStringBuilder.append(wantedAvailablePidsHexArray[wp]);
+                wantedAvailablePidsHexStringBuilder.append(" ");
+            }
+        }
+        MainActivity.wantedAvailablePidsHex = wantedAvailablePidsHexStringBuilder.toString();
+    }
+
+    private void disableUnavailablePidCommandCheckBoxes() {
+        for (int c=0; c<commandCheckBoxIds.length; c++) {
+            CheckBox checkBox = findViewById(commandCheckBoxIds[c]);
+            String checkBoxPidHex = checkBox.getText().toString().substring(0, 2);
+            int checkBoxPidDec = Integer.parseInt(checkBoxPidHex, 16);
+            if (checkBoxPidDec < MainActivity.allAvailablePidsBinary.length() && MainActivity.allAvailablePidsBinary.charAt(checkBoxPidDec) == '1') {
+                checkBox.setEnabled(true);
+            } else {
+                checkBox.setEnabled(false);
+            }
+        }
+    }
+
+    private void checkWantedCommandCheckBoxes() {
+        for (int c=0; c<commandCheckBoxIds.length; c++) {
+            CheckBox checkBox = findViewById(commandCheckBoxIds[c]);
+            String checkBoxPidHex = checkBox.getText().toString().substring(0, 2);
+            int checkBoxPidDec = Integer.parseInt(checkBoxPidHex, 16);
+            if (checkBoxPidDec < MainActivity.allAvailablePidsBinary.length() && MainActivity.allAvailablePidsBinary.charAt(checkBoxPidDec) == '1') {
+                String[] wantedAvailablePidsHexArray = MainActivity.wantedAvailablePidsHex.split(" ");
+                //using a linear search for easy implementation, but a log search would work too:
+                for (int wp=0; wp<wantedAvailablePidsHexArray.length; wp++) {
+                    if (wantedAvailablePidsHexArray[wp].equalsIgnoreCase(checkBoxPidHex)) {
+                        checkBox.setChecked(true);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private String getWantedAvailablePidsHex(){
+        StringBuilder wantedAvailablePidsBytesStringBuilder = new StringBuilder();
+        for (int c=0; c<commandCheckBoxIds.length; c++) {
+            CheckBox checkBox = findViewById(commandCheckBoxIds[c]);
+            if (checkBox.isChecked()) {
+                String checkBoxPidHex = checkBox.getText().toString().substring(0, 2);
+                wantedAvailablePidsBytesStringBuilder.append(checkBoxPidHex);
+                wantedAvailablePidsBytesStringBuilder.append(" ");
+            }
+        }
+        String wantedAvailablePidsBytes = wantedAvailablePidsBytesStringBuilder.toString();
+        return wantedAvailablePidsBytes;
     }
 
     private class Obd2AvailablePidsTask extends Obd2AsyncTask {
 
-        public Obd2AvailablePidsTask(Obd2Activity obd2Activity) {
-            super(obd2Activity);
+        PidsActivity pidsActivity;
+
+        public Obd2AvailablePidsTask(PidsActivity pidsActivity) {
+            super(pidsActivity);
+            this.pidsActivity = pidsActivity;
         }
 
         @Override
         protected String doInBackground(String... strings) {
             try {
-                initializeObd2();
+                //initializeObd2();//TODO UNMOCK
                 runAvailablePidsCommands();
-
-                Intent resultIntent = new Intent();
-                setResult(Activity.RESULT_OK, resultIntent);
-                MainActivity.allAvailablePidsKnown = true;
-                finish();
             } catch (Exception e) {
                 publishProgress(new Pair<Integer, String>(R.id.statusTextView, e.getMessage()));
                 Log.e("example.app", e.getMessage());
@@ -84,7 +173,8 @@ public class PidsActivity extends Obd2Activity {
             MainActivity.allAvailablePidsBinary = "1";
             MainActivity.allAvailablePidsHexResult = new String[8];
             for (int b=0; b<availablePidsCommands.length; b++) {
-                String obdCommandResults = runCommand(availablePidsCommands[b], pidsSupportedValueTextViewIds[b]);
+                //String obdCommandResults = runCommand(availablePidsCommands[b], pidsSupportedValueTextViewIds[b]);
+                String obdCommandResults = "0000AAAAAAAA";//TODO UNMOCK
                 BigInteger availablePids = getAvailablePids(obdCommandResults);
 
                 String availablePidsBinary = availablePids.toString(2);

@@ -7,6 +7,16 @@
     tools:context="com.example.obd2application.PidsActivity">
 
     <TextView
+        android:id="@+id/statusTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="STATUS"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
         android:id="@+id/pidsSupportedTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -28,7 +38,7 @@
         android:id="@+id/pidsSupported_21_40_ValueTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
         android:text="00000000"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pidsSupported_01_20_ValueTextView" />
@@ -37,7 +47,7 @@
         android:id="@+id/pidsSupported_41_60_ValueTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
         android:text="00000000"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pidsSupported_21_40_ValueTextView" />
@@ -46,7 +56,7 @@
         android:id="@+id/pidsSupported_61_80_ValueTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
         android:text="00000000"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pidsSupported_41_60_ValueTextView" />
@@ -64,7 +74,7 @@
         android:id="@+id/pidsSupported_A1_C0_ValueTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
         android:text="00000000"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pidsSupported_81_A0_ValueTextView" />
@@ -73,7 +83,7 @@
         android:id="@+id/pidsSupported_C1_E0_ValueTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
         android:text="00000000"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pidsSupported_A1_C0_ValueTextView" />
@@ -82,19 +92,90 @@
         android:id="@+id/pidsSupported_E1_00_ValueTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
         android:text="00000000"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pidsSupported_C1_E0_ValueTextView" />
 
-    <TextView
-        android:id="@+id/statusTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:layout_marginTop="16dp"
-        android:text="STATUS"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_marginBottom="16dp"
+        android:fadeScrollbars="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pidsSupported_E1_00_ValueTextView">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <CheckBox
+                android:id="@+id/calculatedEngineLoadCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onCommandCheckBoxClick"
+                android:text="04: Calculated Engine Load" />
+
+            <CheckBox
+                android:id="@+id/engineCoolantTemperatureCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onCommandCheckBoxClick"
+                android:text="05: Engine Coolant Temperature"
+                app:layout_constraintTop_toBottomOf="@+id/calculatedEngineLoadCheckBox" />
+
+            <CheckBox
+                android:id="@+id/intakeManifoldAbsolutePressureCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onCommandCheckBoxClick"
+                android:text="0B: Intake Manifold Absolute Pressure"
+                app:layout_constraintTop_toBottomOf="@+id/engineCoolantTemperatureCheckBox" />
+
+            <CheckBox
+                android:id="@+id/engineRpmCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onCommandCheckBoxClick"
+                android:text="0C: Engine Rpm"
+                app:layout_constraintTop_toBottomOf="@+id/intakeManifoldAbsolutePressureCheckBox" />
+
+            <CheckBox
+                android:id="@+id/vehicleSpeedCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onCommandCheckBoxClick"
+                android:text="0D: Vehicle Speed"
+                app:layout_constraintTop_toBottomOf="@+id/engineRpmCheckBox" />
+
+            <CheckBox
+                android:id="@+id/intakeAirTemperatureCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onCommandCheckBoxClick"
+                android:text="0F: Intake Air Temperature"
+                app:layout_constraintTop_toBottomOf="@+id/vehicleSpeedCheckBox" />
+
+            <CheckBox
+                android:id="@+id/fuelTankInputLevelCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onCommandCheckBoxClick"
+                android:text="2F: Fuel Tank Input Level"
+                app:layout_constraintTop_toBottomOf="@+id/intakeAirTemperatureCheckBox" />
+
+            <CheckBox
+                android:id="@+id/ambientAirTemperatureCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onCommandCheckBoxClick"
+                android:text="46: Ambient Air Temperature"
+                app:layout_constraintTop_toBottomOf="@+id/fuelTankInputLevelCheckBox" />
+
+        </android.support.constraint.ConstraintLayout>
+    </ScrollView>
 
 </android.support.constraint.ConstraintLayout>

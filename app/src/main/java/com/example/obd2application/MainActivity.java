@@ -18,50 +18,168 @@ import com.github.pires.obd.commands.pressure.IntakeManifoldPressureCommand;
 import com.github.pires.obd.commands.temperature.AirIntakeTemperatureCommand;
 import com.github.pires.obd.commands.temperature.AmbientAirTemperatureCommand;
 import com.github.pires.obd.commands.temperature.EngineCoolantTemperatureCommand;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GridLabelRenderer;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.util.ArrayList;
 
 public class MainActivity extends Obd2Activity {
 
-    TextView[] textViewArray;
     Obd2StreamTask obd2StreamTask;
     boolean isToggleButtonOn;
 
+    public static boolean isKnownAllAvailablePids;
+    public static String wantedAvailablePidsHex;//each character is a byte indicating which PID from 0 to 255 is desired
     public static String allAvailablePidsBinary;//includes PID 00
     public static String[] allAvailablePidsHexResult;//excludes PID 00
-    public static boolean allAvailablePidsKnown;
 //    public static final String ALL_AVAILABLE_PIDS_BINARY_KEY = "com.example.obd2application.ALL_AVAILABLE_PIDS_BINARY_KEY";
 //    public static final String ALL_AVAILABLE_PIDS_HEX_RESULT_KEY = "com.example.obd2application.ALL_AVAILABLE_PIDS_HEX_RESULT_KEY";
     public static final int PIDS_ACTIVITY_REQUEST_CODE = 1;
 
-    ArrayList<Integer> obdCommandTextViewIdArrayList = new ArrayList<Integer>();
+    public static TextView[] textViewArray;//8 views
+    int[] valueTextViewIdArray;
+    public static GraphView[] graphViewArray;//8 views
+    int[] graphViewIdArray;
+    LineGraphSeries<DataPoint>[] lineGraphSeriesArray;
+
+    String[] pidNames;
+    ObdCommand[] pidCommands;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        textViewArray = new TextView[] {};
         obd2StreamTask = null;
         isToggleButtonOn = false;
+        findViewById(R.id.toggleButton).setEnabled(false);//disabled until available PIDs are known
+
+        isKnownAllAvailablePids = false;
+        wantedAvailablePidsHex = "04 05 0B 0C 0D 0F 2F 46 ";
         allAvailablePidsBinary = "1";//because PID 00 is always available
         allAvailablePidsHexResult = new String[8];
-        allAvailablePidsKnown = false;
 
-        findViewById(R.id.toggleButton).setEnabled(false);//until available PIDs are known
+        initializeViewArrays();
+//        updateProgress(new Pair<Integer, String>(R.id.engineRpmValueGraphView, "801"));
+
+        initializePidMaps();
     }
+
+    private void initializeViewArrays() {
+        textViewArray = new TextView[] {
+                findViewById(R.id.commandTextView0),
+                findViewById(R.id.commandTextView1),
+                findViewById(R.id.commandTextView2),
+                findViewById(R.id.commandTextView3),
+                findViewById(R.id.commandTextView4),
+                findViewById(R.id.commandTextView5),
+                findViewById(R.id.commandTextView6),
+                findViewById(R.id.commandTextView7)
+        };
+
+        valueTextViewIdArray = new int[] {
+                R.id.commandValueTextView0,
+                R.id.commandValueTextView1,
+                R.id.commandValueTextView2,
+                R.id.commandValueTextView3,
+                R.id.commandValueTextView4,
+                R.id.commandValueTextView5,
+                R.id.commandValueTextView6,
+                R.id.commandValueTextView7
+        };
+
+        graphViewArray = new GraphView[] {
+                findViewById(R.id.commandValueGraphView0),
+                findViewById(R.id.commandValueGraphView1),
+                findViewById(R.id.commandValueGraphView2),
+                findViewById(R.id.commandValueGraphView3),
+                findViewById(R.id.commandValueGraphView4),
+                findViewById(R.id.commandValueGraphView5),
+                findViewById(R.id.commandValueGraphView6),
+                findViewById(R.id.commandValueGraphView7)
+        };
+
+        graphViewIdArray = new int[] {
+                R.id.commandValueGraphView0,
+                R.id.commandValueGraphView1,
+                R.id.commandValueGraphView2,
+                R.id.commandValueGraphView3,
+                R.id.commandValueGraphView4,
+                R.id.commandValueGraphView5,
+                R.id.commandValueGraphView6,
+                R.id.commandValueGraphView7
+        };
+
+        lineGraphSeriesArray = new LineGraphSeries[graphViewArray.length];
+        for (int i=0; i<graphViewArray.length; i++) {
+            GridLabelRenderer gridLabelRenderer = graphViewArray[i].getGridLabelRenderer();
+            gridLabelRenderer.setPadding(48);
+            graphViewArray[i].getViewport().setScrollable(true);
+            graphViewArray[i].getViewport().setXAxisBoundsManual(true);
+
+            lineGraphSeriesArray[i] = new LineGraphSeries<>();
+            graphViewArray[i].addSeries(lineGraphSeriesArray[i]);
+        }
+    }
+
+    private void initializePidMaps() {
+        pidNames = new String[256];
+        pidCommands = new ObdCommand[256];
+
+        pidNames[4] = "04: Calculated Engine Load";
+        pidCommands[4] = new LoadCommand();
+        pidNames[5] = "05: Engine Coolant Temperature";
+        pidCommands[5] = new EngineCoolantTemperatureCommand();
+        pidNames[11] = "0B: Intake Manifold Absolute Pressure";
+        pidCommands[11] = new IntakeManifoldPressureCommand();
+        pidNames[12] = "0C: Engine Rpm";
+        pidCommands[12] = new RPMCommand();
+        pidNames[13] = "0D: Vehicle Speed";
+        pidCommands[13] = new SpeedCommand();
+        pidNames[15] = "0F: Intake Air Temperature";
+        pidCommands[15] = new AirIntakeTemperatureCommand();
+        pidNames[47] = "2F: Fuel Tank Input Level";
+        pidCommands[47] = new FuelLevelCommand();
+        pidNames[70] = "46: Ambient Air Temperature";
+        pidCommands[70] = new AmbientAirTemperatureCommand();
+
+        for (int p=0; p<pidCommands.length; p++) {
+            if (pidCommands[p] != null) {
+                pidCommands[p].setMaxNumberResponses(1);
+            }
+        }
+    }
+
+//    @Override
+//    public void onResume(){
+//        super.onResume();
+//        setTextViewToWanted();
+//    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch(requestCode) {
             case (PIDS_ACTIVITY_REQUEST_CODE) : {
-                if (resultCode == Activity.RESULT_OK && allAvailablePidsKnown) {
-                    //e.g. String returnValue = data.getStringExtra("some_key");
+                if (resultCode == Activity.RESULT_OK || isKnownAllAvailablePids) {
+                    //this.wantedAvailablePidsHex = data.getStringExtra("WantedAvailablePidsBytes");
                     findViewById(R.id.toggleButton).setEnabled(true);//now available PIDs are known
+                    setTextViewToWanted();
                 }
                 break;
             }
+        }
+    }
+
+    private void setTextViewToWanted() {
+        for (int tv=0; tv<textViewArray.length; tv++) {
+            textViewArray[tv].setText("NONE");
+        }
+        String[] wantedAvailablePidsHexArray = MainActivity.wantedAvailablePidsHex.length() > 0 ? MainActivity.wantedAvailablePidsHex.split(" ") : new String[0];
+        for (int wp=0; wp<wantedAvailablePidsHexArray.length; wp++) {
+            int wantedAvailablePidDec = Integer.parseInt(wantedAvailablePidsHexArray[wp], 16);
+            textViewArray[wp].setText(pidNames[wantedAvailablePidDec]);
         }
     }
 
@@ -86,93 +204,46 @@ public class MainActivity extends Obd2Activity {
     }
 
     public void onDebugButtonClick(View view) {
-        updateProgress(new Pair<Integer, String>(R.id.debugTextViewB, allAvailablePidsBinary));
+        updateProgress(new Pair<Integer, String>(R.id.debugTextView, this.wantedAvailablePidsHex));
+        //updateProgress(new Pair<Integer, String>(R.id.debugTextView, allAvailablePidsBinary));
+        //updateProgress(new Pair<Integer, String>(R.id.commandValueGraphView0, "803"));
     }
 
     private class Obd2StreamTask extends Obd2AsyncTask {
 
-        public Obd2StreamTask(Obd2Activity obd2Activity) {
-            super(obd2Activity);
+        MainActivity mainActivity;
+
+        public Obd2StreamTask(MainActivity mainActivity) {
+            super(mainActivity);
+            this.mainActivity = mainActivity;
         }
 
         @Override
         protected String doInBackground(String... strings) {
             try {
-                initializeObd2();
+                //initializeObd2();//TODO UNMOCK
 
-                ArrayList<ObdCommand> obdCommands = getAvailableCommands();
 //                ConsumptionRateCommand engineFuelRateCommand = new ConsumptionRateCommand();
 //                engineFuelRateCommand.setMaxNumberResponses(1);
+//                String engineFuelRateCommandResult = runCommand(engineFuelRateCommand, R.id.engineFuelRateValueTextView);
                 while (!isCancelled()) {
                     publishProgress(new Pair<Integer, String>(R.id.statusTextView, "SLEEPING"));
                     Thread.sleep(2000 - System.currentTimeMillis()%2000);
-                    for (int oc=0; oc<obdCommands.size(); oc++) {
-                        runCommand(obdCommands.get(oc), obdCommandTextViewIdArrayList.get(oc));
+
+                    String[] wantedAvailablePidsHexArray = MainActivity.wantedAvailablePidsHex.split(" ");
+                    for (int wp=0; wp<wantedAvailablePidsHexArray.length; wp++) {
+                        int wantedAvailablePidDec = Integer.parseInt(wantedAvailablePidsHexArray[wp], 16);
+                        //String commandResult = runCommand(pidCommands[wantedAvailablePidDec], valueTextViewIdArray[wp]);
+                        String commandResult = "123M";//TODO UNMOCK
+                        String unitlessResult = commandResult.replaceAll("[^\\d.]", "");
+                        publishProgress(new Pair<Integer, String>(graphViewIdArray[wp], unitlessResult));
                     }
-//                    String engineFuelRateCommandResult = runCommand(engineFuelRateCommand, R.id.engineFuelRateValueTextView);
                 }
             } catch (Exception e) {
                 publishProgress(new Pair<Integer, String>(R.id.statusTextView, e.getMessage()));
                 Log.e("example.app", e.getMessage());
             }
             return null;
-        }
-
-        protected ArrayList<ObdCommand> getAvailableCommands() {
-            ArrayList<ObdCommand> obdCommands = new ArrayList<>();
-
-            //Eventually COULDDO: dynamically generate the TextViews
-            //Eventually COULDDO: map the PIDs to ObdCommands
-            if (MainActivity.allAvailablePidsBinary.length() >= 5 && MainActivity.allAvailablePidsBinary.charAt(4) == '1') {
-                LoadCommand calculatedEngineLoadCommand = new LoadCommand();
-                calculatedEngineLoadCommand.setMaxNumberResponses(1);
-                obdCommands.add(calculatedEngineLoadCommand);
-                obdCommandTextViewIdArrayList.add(R.id.calculatedEngineLoadValueTextView);
-            }
-            if (MainActivity.allAvailablePidsBinary.length() >= 6 && MainActivity.allAvailablePidsBinary.charAt(5) == '1') {
-                EngineCoolantTemperatureCommand engineCoolantTemperatureCommand = new EngineCoolantTemperatureCommand();
-                engineCoolantTemperatureCommand.setMaxNumberResponses(1);
-                obdCommands.add(engineCoolantTemperatureCommand);
-                obdCommandTextViewIdArrayList.add(R.id.engineCoolantTemperatureValueTextView);
-            }
-            if (MainActivity.allAvailablePidsBinary.length() >= 12 && MainActivity.allAvailablePidsBinary.charAt(11) == '1') {
-                IntakeManifoldPressureCommand intakeManifoldAbsolutePressureCommand = new IntakeManifoldPressureCommand();
-                intakeManifoldAbsolutePressureCommand.setMaxNumberResponses(1);
-                obdCommands.add(intakeManifoldAbsolutePressureCommand);
-                obdCommandTextViewIdArrayList.add(R.id.intakeManifoldAbsolutePressureValueTextView);
-            }
-            if (MainActivity.allAvailablePidsBinary.length() >= 13 && MainActivity.allAvailablePidsBinary.charAt(12) == '1') {
-                RPMCommand engineRpmCommand = new RPMCommand();
-                engineRpmCommand.setMaxNumberResponses(1);
-                obdCommands.add(engineRpmCommand);
-                obdCommandTextViewIdArrayList.add(R.id.engineRpmValueTextView);
-            }
-            if (MainActivity.allAvailablePidsBinary.length() >= 14 && MainActivity.allAvailablePidsBinary.charAt(13) == '1') {
-                SpeedCommand vehicleSpeedCommand = new SpeedCommand();
-                vehicleSpeedCommand.setMaxNumberResponses(1);
-                obdCommands.add(vehicleSpeedCommand);
-                obdCommandTextViewIdArrayList.add(R.id.vehicleSpeedValueTextView);
-            }
-            if (MainActivity.allAvailablePidsBinary.length() >= 16 && MainActivity.allAvailablePidsBinary.charAt(15) == '1') {
-                AirIntakeTemperatureCommand intakeAirTemperatureCommand = new AirIntakeTemperatureCommand();
-                intakeAirTemperatureCommand.setMaxNumberResponses(1);
-                obdCommands.add(intakeAirTemperatureCommand);
-                obdCommandTextViewIdArrayList.add(R.id.intakeAirTemperatureValueTextView);
-            }
-            if (MainActivity.allAvailablePidsBinary.length() >= 48 && MainActivity.allAvailablePidsBinary.charAt(47) == '1') {
-                FuelLevelCommand fuelTankInputLevelCommand = new FuelLevelCommand();
-                fuelTankInputLevelCommand.setMaxNumberResponses(1);
-                obdCommands.add(fuelTankInputLevelCommand);
-                obdCommandTextViewIdArrayList.add(R.id.fuelTankLevelInputValueTextView);
-            }
-            if (MainActivity.allAvailablePidsBinary.length() >= 71 && MainActivity.allAvailablePidsBinary.charAt(70) == '1') {
-                AmbientAirTemperatureCommand ambientAirTemperatureCommand = new AmbientAirTemperatureCommand();
-                ambientAirTemperatureCommand.setMaxNumberResponses(1);
-                obdCommands.add(ambientAirTemperatureCommand);
-                obdCommandTextViewIdArrayList.add(R.id.ambientAirTemperatureValueTextView);
-            }
-
-            return obdCommands;
         }
     }
 }
