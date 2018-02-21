@@ -49,14 +49,8 @@ public class PidsActivity extends Obd2Activity {
 
         if (!MainActivity.isKnownAllAvailablePids) {
             Obd2AvailablePidsTask obd2AvailablePidsTask = new Obd2AvailablePidsTask(this);
-            try {
-                obd2AvailablePidsTask.execute().get();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            pruneWantedAvailablePidsHex();
-            disableUnavailablePidCommandCheckBoxes();
-            checkWantedCommandCheckBoxes();
+            obd2AvailablePidsTask.execute();
+            //also see OnPostExecute function overrided in Obd2AvailablePidsTask class
             MainActivity.isKnownAllAvailablePids = true;
             Intent resultIntent = new Intent();
             //resultIntent.putExtra("WantedAvailablePidsBytes", getWantedAvailablePidsHex());
@@ -146,7 +140,7 @@ public class PidsActivity extends Obd2Activity {
         @Override
         protected String doInBackground(String... strings) {
             try {
-                //initializeObd2();//TODO UNMOCK
+                initializeObd2();//TODO REMOCK
                 runAvailablePidsCommands();
             } catch (Exception e) {
                 publishProgress(new Pair<Integer, String>(R.id.statusTextView, e.getMessage()));
@@ -173,8 +167,8 @@ public class PidsActivity extends Obd2Activity {
             MainActivity.allAvailablePidsBinary = "1";
             MainActivity.allAvailablePidsHexResult = new String[8];
             for (int b=0; b<availablePidsCommands.length; b++) {
-                //String obdCommandResults = runCommand(availablePidsCommands[b], pidsSupportedValueTextViewIds[b]);
-                String obdCommandResults = "0000AAAAAAAA";//TODO UNMOCK
+                String obdCommandResults = runCommand(availablePidsCommands[b], pidsSupportedValueTextViewIds[b]);
+                //String obdCommandResults = "0000AAAAAAAA";//TODO REMOCK
                 BigInteger availablePids = getAvailablePids(obdCommandResults);
 
                 String availablePidsBinary = availablePids.toString(2);
@@ -208,6 +202,13 @@ public class PidsActivity extends Obd2Activity {
                 availablePids = availablePids.or(obdCommandResultBigInteger);
             }
             return availablePids;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            pruneWantedAvailablePidsHex();
+            disableUnavailablePidCommandCheckBoxes();
+            checkWantedCommandCheckBoxes();
         }
     }
 }

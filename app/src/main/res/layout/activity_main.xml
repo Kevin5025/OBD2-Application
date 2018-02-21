@@ -39,10 +39,10 @@
         android:id="@+id/currentTimeMillisValueTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="32dp"
+        android:layout_marginRight="16dp"
         android:text="-1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/currentTimeMillisTextView" />
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/currentTimeMillisTextView" />
 
     <TextView
         android:id="@+id/debugTextView"
@@ -90,7 +90,7 @@
     <ScrollView
         android:id="@+id/textViewScrollView"
         android:layout_width="0dp"
-        android:layout_height="100dp"
+        android:layout_height="332dp"
         android:fadeScrollbars="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -100,6 +100,7 @@
         app:layout_constraintTop_toBottomOf="@+id/currentTimeMillisValueTextView">
 
         <android.support.constraint.ConstraintLayout
+            android:layout_marginLeft="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -107,8 +108,7 @@
                 android:id="@+id/commandTextView0"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
-                android:text="Calculated Engine Load"
+                android:text="04: Calculated Engine Load"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintTop_toTopOf="parent"/>
             <!--app:layout_constraintTop_toBottomOf="@+id/currentTimeMillisValueTextView"-->
@@ -117,214 +117,188 @@
                 android:id="@+id/commandValueTextView0"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
+                android:layout_marginRight="16dp"
                 android:text="-1"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/commandTextView0" />
+
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/commandValueGraphView0"
+                android:layout_width="match_parent"
+                android:layout_height="128dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandTextView0" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView0" />
 
             <TextView
                 android:id="@+id/commandTextView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
-                android:text="Engine Coolant Temperature"
+                android:text="05: Engine Coolant Temperature"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView0" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView0" />
 
             <TextView
                 android:id="@+id/commandValueTextView1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
+                android:layout_marginRight="16dp"
                 android:text="-1"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/commandTextView1" />
+
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/commandValueGraphView1"
+                android:layout_width="match_parent"
+                android:layout_height="128dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandTextView1" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView1" />
 
             <TextView
                 android:id="@+id/commandTextView2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
-                android:text="Intake Manifold Absolute Pressure"
+                android:text="0B: Intake Manifold Absolute Pressure"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView1" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView1" />
 
             <TextView
                 android:id="@+id/commandValueTextView2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
+                android:layout_marginRight="16dp"
                 android:text="-1"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/commandTextView2" />
+
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/commandValueGraphView2"
+                android:layout_width="match_parent"
+                android:layout_height="128dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandTextView2" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView2" />
 
             <TextView
                 android:id="@+id/commandTextView3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
-                android:text="Engine Rpm"
+                android:text="0C: Engine Rpm"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView2" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView2" />
 
             <TextView
                 android:id="@+id/commandValueTextView3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
+                android:layout_marginRight="16dp"
                 android:text="-1"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/commandTextView3" />
+
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/commandValueGraphView3"
+                android:layout_width="match_parent"
+                android:layout_height="128dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandTextView3" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView3" />
 
             <TextView
                 android:id="@+id/commandTextView4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
-                android:text="Vehicle Speed"
+                android:text="0D: Vehicle Speed"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView3" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView3" />
 
             <TextView
                 android:id="@+id/commandValueTextView4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
+                android:layout_marginRight="16dp"
                 android:text="-1"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/commandTextView4" />
+
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/commandValueGraphView4"
+                android:layout_width="match_parent"
+                android:layout_height="128dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandTextView4" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView4" />
 
             <TextView
                 android:id="@+id/commandTextView5"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
-                android:text="Intake Air Temperature"
+                android:text="0F: Intake Air Temperature"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView4" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView4" />
 
             <TextView
                 android:id="@+id/commandValueTextView5"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
+                android:layout_marginRight="16dp"
                 android:text="-1"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/commandTextView5" />
+
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/commandValueGraphView5"
+                android:layout_width="match_parent"
+                android:layout_height="128dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandTextView5" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView5" />
 
             <TextView
                 android:id="@+id/commandTextView6"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
-                android:text="Fuel Tank Input Level"
+                android:text="2F: Fuel Tank Input Level"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView5" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView5" />
 
             <TextView
                 android:id="@+id/commandValueTextView6"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
+                android:layout_marginRight="16dp"
                 android:text="-1"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/commandTextView6" />
+
+            <com.jjoe64.graphview.GraphView
+                android:id="@+id/commandValueGraphView6"
+                android:layout_width="match_parent"
+                android:layout_height="128dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandTextView6" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView6" />
 
             <TextView
                 android:id="@+id/commandTextView7"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="16dp"
-                android:text="Ambient Air Temperature"
+                android:text="46: Ambient Air Temperature"
                 app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView6" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView6" />
 
             <TextView
                 android:id="@+id/commandValueTextView7"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="32dp"
+                android:layout_marginRight="16dp"
                 android:text="-1"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandTextView7" />
-        </android.support.constraint.ConstraintLayout>
-    </ScrollView>
-
-    <ScrollView
-        android:layout_width="0dp"
-        android:layout_height="200dp"
-        android:layout_marginTop="16dp"
-        android:fadeScrollbars="false"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewScrollView">
-
-        <android.support.constraint.ConstraintLayout
-            android:layout_marginLeft="16dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <com.jjoe64.graphview.GraphView
-                android:id="@+id/commandValueGraphView0"
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <com.jjoe64.graphview.GraphView
-                android:id="@+id/commandValueGraphView1"
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView0" />
-
-            <com.jjoe64.graphview.GraphView
-                android:id="@+id/commandValueGraphView2"
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView1" />
-
-            <com.jjoe64.graphview.GraphView
-                android:id="@+id/commandValueGraphView3"
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView2" />
-
-            <com.jjoe64.graphview.GraphView
-                android:id="@+id/commandValueGraphView4"
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView3" />
-
-            <com.jjoe64.graphview.GraphView
-                android:id="@+id/commandValueGraphView5"
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView4" />
-
-            <com.jjoe64.graphview.GraphView
-                android:id="@+id/commandValueGraphView6"
-                android:layout_width="match_parent"
-                android:layout_height="100dp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView5" />
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/commandTextView7" />
 
             <com.jjoe64.graphview.GraphView
                 android:id="@+id/commandValueGraphView7"
                 android:layout_width="match_parent"
-                android:layout_height="100dp"
+                android:layout_height="128dp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/commandValueGraphView6" />
+                app:layout_constraintTop_toBottomOf="@+id/commandValueTextView7" />
+
         </android.support.constraint.ConstraintLayout>
     </ScrollView>
-
 
 </android.support.constraint.ConstraintLayout>

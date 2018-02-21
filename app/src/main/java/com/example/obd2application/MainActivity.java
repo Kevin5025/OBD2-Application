@@ -23,8 +23,6 @@ import com.jjoe64.graphview.GridLabelRenderer;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
-import java.util.ArrayList;
-
 public class MainActivity extends Obd2Activity {
 
     Obd2StreamTask obd2StreamTask;
@@ -38,11 +36,11 @@ public class MainActivity extends Obd2Activity {
 //    public static final String ALL_AVAILABLE_PIDS_HEX_RESULT_KEY = "com.example.obd2application.ALL_AVAILABLE_PIDS_HEX_RESULT_KEY";
     public static final int PIDS_ACTIVITY_REQUEST_CODE = 1;
 
-    public static TextView[] textViewArray;//8 views
-    int[] valueTextViewIdArray;
-    public static GraphView[] graphViewArray;//8 views
-    int[] graphViewIdArray;
-    LineGraphSeries<DataPoint>[] lineGraphSeriesArray;
+    public static TextView[] commandTextViewArray;//8 views
+    int[] commandValueTextViewIdArray;
+    public static GraphView[] commandGraphViewArray;//8 views
+    int[] commandGraphViewIdArray;
+    LineGraphSeries<DataPoint>[] commandLineGraphSeriesArray;
 
     String[] pidNames;
     ObdCommand[] pidCommands;
@@ -62,12 +60,11 @@ public class MainActivity extends Obd2Activity {
 
         initializeViewArrays();
 //        updateProgress(new Pair<Integer, String>(R.id.engineRpmValueGraphView, "801"));
-
         initializePidMaps();
     }
 
     private void initializeViewArrays() {
-        textViewArray = new TextView[] {
+        commandTextViewArray = new TextView[] {
                 findViewById(R.id.commandTextView0),
                 findViewById(R.id.commandTextView1),
                 findViewById(R.id.commandTextView2),
@@ -78,7 +75,7 @@ public class MainActivity extends Obd2Activity {
                 findViewById(R.id.commandTextView7)
         };
 
-        valueTextViewIdArray = new int[] {
+        commandValueTextViewIdArray = new int[] {
                 R.id.commandValueTextView0,
                 R.id.commandValueTextView1,
                 R.id.commandValueTextView2,
@@ -89,7 +86,7 @@ public class MainActivity extends Obd2Activity {
                 R.id.commandValueTextView7
         };
 
-        graphViewArray = new GraphView[] {
+        commandGraphViewArray = new GraphView[] {
                 findViewById(R.id.commandValueGraphView0),
                 findViewById(R.id.commandValueGraphView1),
                 findViewById(R.id.commandValueGraphView2),
@@ -100,7 +97,7 @@ public class MainActivity extends Obd2Activity {
                 findViewById(R.id.commandValueGraphView7)
         };
 
-        graphViewIdArray = new int[] {
+        commandGraphViewIdArray = new int[] {
                 R.id.commandValueGraphView0,
                 R.id.commandValueGraphView1,
                 R.id.commandValueGraphView2,
@@ -111,15 +108,15 @@ public class MainActivity extends Obd2Activity {
                 R.id.commandValueGraphView7
         };
 
-        lineGraphSeriesArray = new LineGraphSeries[graphViewArray.length];
-        for (int i=0; i<graphViewArray.length; i++) {
-            GridLabelRenderer gridLabelRenderer = graphViewArray[i].getGridLabelRenderer();
-            gridLabelRenderer.setPadding(48);
-            graphViewArray[i].getViewport().setScrollable(true);
-            graphViewArray[i].getViewport().setXAxisBoundsManual(true);
+        commandLineGraphSeriesArray = new LineGraphSeries[commandGraphViewArray.length];
+        for (int i = 0; i< commandGraphViewArray.length; i++) {
+            GridLabelRenderer gridLabelRenderer = commandGraphViewArray[i].getGridLabelRenderer();
+            gridLabelRenderer.setPadding(80);
+            commandGraphViewArray[i].getViewport().setScrollable(true);
+            commandGraphViewArray[i].getViewport().setXAxisBoundsManual(true);
 
-            lineGraphSeriesArray[i] = new LineGraphSeries<>();
-            graphViewArray[i].addSeries(lineGraphSeriesArray[i]);
+            commandLineGraphSeriesArray[i] = new LineGraphSeries<>();
+            commandGraphViewArray[i].addSeries(commandLineGraphSeriesArray[i]);
         }
     }
 
@@ -173,13 +170,13 @@ public class MainActivity extends Obd2Activity {
     }
 
     private void setTextViewToWanted() {
-        for (int tv=0; tv<textViewArray.length; tv++) {
-            textViewArray[tv].setText("NONE");
+        for (int tv = 0; tv< commandTextViewArray.length; tv++) {
+            commandTextViewArray[tv].setText("NONE");
         }
         String[] wantedAvailablePidsHexArray = MainActivity.wantedAvailablePidsHex.length() > 0 ? MainActivity.wantedAvailablePidsHex.split(" ") : new String[0];
         for (int wp=0; wp<wantedAvailablePidsHexArray.length; wp++) {
             int wantedAvailablePidDec = Integer.parseInt(wantedAvailablePidsHexArray[wp], 16);
-            textViewArray[wp].setText(pidNames[wantedAvailablePidDec]);
+            commandTextViewArray[wp].setText(pidNames[wantedAvailablePidDec]);
         }
     }
 
@@ -216,12 +213,13 @@ public class MainActivity extends Obd2Activity {
         public Obd2StreamTask(MainActivity mainActivity) {
             super(mainActivity);
             this.mainActivity = mainActivity;
+
         }
 
         @Override
         protected String doInBackground(String... strings) {
             try {
-                //initializeObd2();//TODO UNMOCK
+                initializeObd2();//TODO REMOCK
 
 //                ConsumptionRateCommand engineFuelRateCommand = new ConsumptionRateCommand();
 //                engineFuelRateCommand.setMaxNumberResponses(1);
@@ -233,10 +231,10 @@ public class MainActivity extends Obd2Activity {
                     String[] wantedAvailablePidsHexArray = MainActivity.wantedAvailablePidsHex.split(" ");
                     for (int wp=0; wp<wantedAvailablePidsHexArray.length; wp++) {
                         int wantedAvailablePidDec = Integer.parseInt(wantedAvailablePidsHexArray[wp], 16);
-                        //String commandResult = runCommand(pidCommands[wantedAvailablePidDec], valueTextViewIdArray[wp]);
-                        String commandResult = "123M";//TODO UNMOCK
+                        String commandResult = runCommand(pidCommands[wantedAvailablePidDec], commandValueTextViewIdArray[wp]);
+                        //String commandResult = "123M";//TODO REMOCK
                         String unitlessResult = commandResult.replaceAll("[^\\d.]", "");
-                        publishProgress(new Pair<Integer, String>(graphViewIdArray[wp], unitlessResult));
+                        publishProgress(new Pair<Integer, String>(commandGraphViewIdArray[wp], unitlessResult));
                     }
                 }
             } catch (Exception e) {
