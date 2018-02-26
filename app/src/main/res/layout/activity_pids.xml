@@ -160,12 +160,20 @@
                 app:layout_constraintTop_toBottomOf="@+id/vehicleSpeedCheckBox" />
 
             <CheckBox
+                android:id="@+id/airFlowRateCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onCommandCheckBoxClick"
+                android:text="10: Air Flow Rate"
+                app:layout_constraintTop_toBottomOf="@+id/intakeAirTemperatureCheckBox" />
+
+            <CheckBox
                 android:id="@+id/fuelTankInputLevelCheckBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:onClick="onCommandCheckBoxClick"
                 android:text="2F: Fuel Tank Input Level"
-                app:layout_constraintTop_toBottomOf="@+id/intakeAirTemperatureCheckBox" />
+                app:layout_constraintTop_toBottomOf="@+id/airFlowRateCheckBox" />
 
             <CheckBox
                 android:id="@+id/ambientAirTemperatureCheckBox"
@@ -174,6 +182,30 @@
                 android:onClick="onCommandCheckBoxClick"
                 android:text="46: Ambient Air Temperature"
                 app:layout_constraintTop_toBottomOf="@+id/fuelTankInputLevelCheckBox" />
+
+            <CheckBox
+                android:id="@+id/engineFuelRateCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onCommandCheckBoxClick"
+                android:text="5E: Engine Fuel Rate"
+                app:layout_constraintTop_toBottomOf="@+id/ambientAirTemperatureCheckBox" />
+
+            <CheckBox
+                android:id="@+id/engineFuelRateCheckBox1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onCommandCheckBoxClick"
+                android:text="Z0: (Estimated) Engine Fuel Rate"
+                app:layout_constraintTop_toBottomOf="@+id/engineFuelRateCheckBox" />
+
+            <CheckBox
+                android:id="@+id/fuelEfficiencyCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onCommandCheckBoxClick"
+                android:text="Z1: (Estimated) Fuel Efficiency"
+                app:layout_constraintTop_toBottomOf="@+id/engineFuelRateCheckBox1" />
 
         </android.support.constraint.ConstraintLayout>
     </ScrollView>

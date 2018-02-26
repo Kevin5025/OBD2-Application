@@ -12,7 +12,9 @@ import android.widget.Toast;
 import com.github.pires.obd.commands.ObdCommand;
 import com.github.pires.obd.commands.SpeedCommand;
 import com.github.pires.obd.commands.engine.LoadCommand;
+import com.github.pires.obd.commands.engine.MassAirFlowCommand;
 import com.github.pires.obd.commands.engine.RPMCommand;
+import com.github.pires.obd.commands.fuel.ConsumptionRateCommand;
 import com.github.pires.obd.commands.fuel.FuelLevelCommand;
 import com.github.pires.obd.commands.pressure.IntakeManifoldPressureCommand;
 import com.github.pires.obd.commands.temperature.AirIntakeTemperatureCommand;
@@ -42,8 +44,10 @@ public class MainActivity extends Obd2Activity {
     int[] commandGraphViewIdArray;
     LineGraphSeries<DataPoint>[] commandLineGraphSeriesArray;
 
+    String[] customParameterNames;
     String[] pidNames;
     ObdCommand[] pidCommands;
+    String[] memoizedPidCommandResults;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +58,7 @@ public class MainActivity extends Obd2Activity {
         findViewById(R.id.toggleButton).setEnabled(false);//disabled until available PIDs are known
 
         isKnownAllAvailablePids = false;
-        wantedAvailablePidsHex = "04 05 0B 0C 0D 0F 2F 46 ";
+        wantedAvailablePidsHex = "04 05 0C 0D 2F Z0 Z1";
         allAvailablePidsBinary = "1";//because PID 00 is always available
         allAvailablePidsHexResult = new String[8];
 
@@ -120,7 +124,8 @@ public class MainActivity extends Obd2Activity {
         }
     }
 
-    private void initializePidMaps() {
+    private void initializePidMaps() {//EVERY NEW PARAMETER TODO
+        customParameterNames = new String[2];
         pidNames = new String[256];
         pidCommands = new ObdCommand[256];
 
@@ -136,10 +141,16 @@ public class MainActivity extends Obd2Activity {
         pidCommands[13] = new SpeedCommand();
         pidNames[15] = "0F: Intake Air Temperature";
         pidCommands[15] = new AirIntakeTemperatureCommand();
+        pidNames[16] = "10: Air Flow Rate";
+        pidCommands[16] = new MassAirFlowCommand();
         pidNames[47] = "2F: Fuel Tank Input Level";
         pidCommands[47] = new FuelLevelCommand();
         pidNames[70] = "46: Ambient Air Temperature";
         pidCommands[70] = new AmbientAirTemperatureCommand();
+        pidNames[94] = "5E: Engine Fuel Rate";
+        pidCommands[94] = new ConsumptionRateCommand();
+        customParameterNames[0] = "Z0: (Estimated) Engine Fuel Rate";
+        customParameterNames[1] = "Z1: (Estimated) Fuel Efficiency";
 
         for (int p=0; p<pidCommands.length; p++) {
             if (pidCommands[p] != null) {
@@ -175,8 +186,13 @@ public class MainActivity extends Obd2Activity {
         }
         String[] wantedAvailablePidsHexArray = MainActivity.wantedAvailablePidsHex.length() > 0 ? MainActivity.wantedAvailablePidsHex.split(" ") : new String[0];
         for (int wp=0; wp<wantedAvailablePidsHexArray.length; wp++) {
-            int wantedAvailablePidDec = Integer.parseInt(wantedAvailablePidsHexArray[wp], 16);
-            commandTextViewArray[wp].setText(pidNames[wantedAvailablePidDec]);
+            if (wantedAvailablePidsHexArray[wp].charAt(0) == 'Z') {
+                int wantedAvailableCustomParameterDec = Integer.parseInt(wantedAvailablePidsHexArray[wp].substring(1), 16);
+                commandTextViewArray[wp].setText(customParameterNames[wantedAvailableCustomParameterDec]);
+            } else {
+                int wantedAvailablePidDec = Integer.parseInt(wantedAvailablePidsHexArray[wp], 16);
+                commandTextViewArray[wp].setText(pidNames[wantedAvailablePidDec]);
+            }
         }
     }
 
@@ -219,22 +235,44 @@ public class MainActivity extends Obd2Activity {
         @Override
         protected String doInBackground(String... strings) {
             try {
-                initializeObd2();//TODO REMOCK
-
-//                ConsumptionRateCommand engineFuelRateCommand = new ConsumptionRateCommand();
-//                engineFuelRateCommand.setMaxNumberResponses(1);
-//                String engineFuelRateCommandResult = runCommand(engineFuelRateCommand, R.id.engineFuelRateValueTextView);
+                initializeObd2();//REMOCK BY COMMENTING
                 while (!isCancelled()) {
                     publishProgress(new Pair<Integer, String>(R.id.statusTextView, "SLEEPING"));
-                    Thread.sleep(2000 - System.currentTimeMillis()%2000);
+                    Long scanPeriodMillis = 2000L;
+                    Thread.sleep( scanPeriodMillis - System.currentTimeMillis()%scanPeriodMillis);
+                    memoizedPidCommandResults = new String[256];
 
                     String[] wantedAvailablePidsHexArray = MainActivity.wantedAvailablePidsHex.split(" ");
-                    for (int wp=0; wp<wantedAvailablePidsHexArray.length; wp++) {
-                        int wantedAvailablePidDec = Integer.parseInt(wantedAvailablePidsHexArray[wp], 16);
-                        String commandResult = runCommand(pidCommands[wantedAvailablePidDec], commandValueTextViewIdArray[wp]);
-                        //String commandResult = "123M";//TODO REMOCK
-                        String unitlessResult = commandResult.replaceAll("[^\\d.]", "");
-                        publishProgress(new Pair<Integer, String>(commandGraphViewIdArray[wp], unitlessResult));
+                    for (int wp=0; wp<wantedAvailablePidsHexArray.length; wp++) {//TODO extract method from for loop
+                        String commandResult = "123M";//MOCK
+                        String commandUnitlessResult = "123";//MOCK
+                        //REMOCK BY COMMENTING ALL BELOW
+                        if (wantedAvailablePidsHexArray[wp].charAt(0) == 'Z') {//EVERY NEW CUSTOM PARAMETER TODO
+                            if (wantedAvailablePidsHexArray[wp].equals("Z0")) {
+                                int airFlowRatePidDec = 16;
+                                Double airFlowRateValue = getCommandPidDecValue(airFlowRatePidDec, null);//in g per s
+                                Double estimatedEngineFuelRateValue = airFlowRateValue / 14.7 / 719.7 * 3600;//1 gram of gasoline per 14.7 grams of air, one liter of gasoline per 719.7g of gasoline, 3600 seconds per hour
+
+                                commandUnitlessResult = String.format("%.2f", estimatedEngineFuelRateValue);
+                                publishProgress(new Pair(commandValueTextViewIdArray[wp], commandUnitlessResult + "L/hr"));//in L per hr
+                            } else if (wantedAvailablePidsHexArray[wp].equals("Z1")) {
+                                int airFlowRatePidDec = 16;
+                                Double airFlowRateValue = getCommandPidDecValue(airFlowRatePidDec, null);//in g per s
+                                Double estimatedEngineFuelRateValue = airFlowRateValue / 14.7 / 719.7 * 3600;//1g of gasoline per 14.7g of air, 1L of gasoline per 719.7g of gasoline, 3600s per hr
+
+                                int vehicleSpeedPidDec = 13;
+                                Double vehicleSpeedValue = getCommandPidDecValue(vehicleSpeedPidDec, null);//in km/hr
+                                Double estimatedFuelEfficiencyValue = vehicleSpeedValue / estimatedEngineFuelRateValue;
+
+                                commandUnitlessResult = String.format("%.2f", estimatedFuelEfficiencyValue);
+                                publishProgress(new Pair(commandValueTextViewIdArray[wp], commandUnitlessResult + "km/L"));//in km per L
+                            }
+                        } else {
+                            int wantedAvailablePidDec = Integer.parseInt(wantedAvailablePidsHexArray[wp], 16);
+                            commandUnitlessResult = getCommandPidDecUnitlessResult(wantedAvailablePidDec, commandValueTextViewIdArray[wp]);
+                        }
+                        //REMOCK BY COMMENTING ALL ABOVE
+                        publishProgress(new Pair<Integer, String>(commandGraphViewIdArray[wp], commandUnitlessResult));
                     }
                 }
             } catch (Exception e) {
@@ -243,5 +281,30 @@ public class MainActivity extends Obd2Activity {
             }
             return null;
         }
+
+        private Double getCommandPidDecValue(int pidDec, Integer commandValueTextViewId) {
+            String commandUnitlessResult = getCommandPidDecUnitlessResult(pidDec, commandValueTextViewId);
+            Double commandValue = Double.valueOf(commandUnitlessResult);
+            return commandValue;
+        }
+
+        private String getCommandPidDecUnitlessResult(int pidDec, Integer commandValueTextViewId) {
+            String commandResult = getMemoizedCommandResult(pidDec, commandValueTextViewId);
+            String commandUnitlessResult = commandResult.replaceAll("[^\\d.]", "");//TODO memoize write
+            return commandUnitlessResult;
+        }
+
+        private String getMemoizedCommandResult(int pidDec, Integer commandValueTextViewId) {
+            if (memoizedPidCommandResults[pidDec] == null) {
+                memoizedPidCommandResults[pidDec] = runCommand(pidCommands[pidDec], commandValueTextViewId);
+            }
+            return memoizedPidCommandResults[pidDec];
+        }
+    }
+
+    public static boolean isAvailablePidHex(String pidHex) {
+        int pidDec = Integer.parseInt(pidHex, 16);
+        boolean isAvailablePidHex = pidDec < MainActivity.allAvailablePidsBinary.length() && MainActivity.allAvailablePidsBinary.charAt(pidDec) == '1';
+        return isAvailablePidHex;
     }
 }

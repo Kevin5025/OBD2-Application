@@ -54,7 +54,7 @@ public abstract class Obd2AsyncTask extends AsyncTask<String, Pair<Integer, Stri
         runCommand(echoOffCommand, R.id.statusTextView);
     }
 
-    protected String runCommand(ObdCommand obdCommand, int valueTextViewId) {
+    protected String runCommand(ObdCommand obdCommand, Integer valueTextViewId) {
         String obdCommandFormattedResult;
         try {
             publishProgress(new Pair<Integer, String>(R.id.statusTextView, "Running " + obdCommand.getName()));
