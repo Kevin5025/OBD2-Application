@@ -27,7 +27,7 @@ public class PidsActivity extends Obd2Activity {
             R.id.pidsSupported_E1_00_ValueTextView
     };
 
-    Integer[] commandCheckBoxIds = new Integer[] {//EVERY NEW PARAMETER TODO
+    Integer[] parameterCheckBoxIds = new Integer[] {//EVERY NEW PARAMETER TODO
             R.id.calculatedEngineLoadCheckBox,
             R.id.engineCoolantTemperatureCheckBox,
             R.id.intakeManifoldAbsolutePressureCheckBox,
@@ -38,8 +38,9 @@ public class PidsActivity extends Obd2Activity {
             R.id.fuelTankInputLevelCheckBox,
             R.id.ambientAirTemperatureCheckBox,
             R.id.engineFuelRateCheckBox,
-            R.id.engineFuelRateCheckBox1,
-            R.id.fuelEfficiencyCheckBox
+
+            R.id.estimatedEngineFuelRateCheckBox,
+            R.id.estimatedFuelEfficiencyCheckBox
     };
 
     @Override
@@ -57,8 +58,8 @@ public class PidsActivity extends Obd2Activity {
             //also see OnPostExecute function overrided in Obd2AvailablePidsTask class
             MainActivity.isKnownAllAvailablePids = true;
             Intent resultIntent = new Intent();
-            //resultIntent.putExtra("WantedAvailablePidsBytes", getWantedAvailablePidsHex());
-            //MainActivity.wantedAvailablePidsHex = getWantedAvailablePidsHex();
+            //resultIntent.putExtra("WantedAvailablePidsBytes", getWantedAvailableParametersHex());
+            //MainActivity.wantedAvailableParametersHex = getWantedAvailableParametersHex();
             setResult(Activity.RESULT_OK, resultIntent);
             //finish();
         } else {
@@ -71,9 +72,9 @@ public class PidsActivity extends Obd2Activity {
 
     private void initializeCheckBoxes() {
         StringBuilder wantedAvailablePidsHexStringBuilder = new StringBuilder();
-        String[] wantedAvailablePidsHexArray = MainActivity.wantedAvailablePidsHex.split(" ");
-        for (int c=0; c<commandCheckBoxIds.length; c++) {
-            CheckBox checkBox = findViewById(commandCheckBoxIds[c]);
+        String[] wantedAvailablePidsHexArray = MainActivity.wantedAvailableParametersHex.split(" ");
+        for (int c = 0; c< parameterCheckBoxIds.length; c++) {
+            CheckBox checkBox = findViewById(parameterCheckBoxIds[c]);
             String checkBoxText = checkBox.getText().toString();
             boolean isCustomParameterCheckBox = checkBoxText.charAt(0) == 'Z';
 
@@ -110,23 +111,23 @@ public class PidsActivity extends Obd2Activity {
                 checkBox.setEnabled(false);
             }
         }
-        MainActivity.wantedAvailablePidsHex = wantedAvailablePidsHexStringBuilder.toString();
+        MainActivity.wantedAvailableParametersHex = wantedAvailablePidsHexStringBuilder.toString();
     }
 
-    public void onCommandCheckBoxClick(View view) {
+    public void onParameterCheckBoxClick(View view) {
         if (getNumCheckBoxesChecked() > 8) {
             CheckBox checkBox = (CheckBox) view;
             checkBox.setChecked(false);
             Toast.makeText(this, "Can't have more than 8 monitors selected. ", Toast.LENGTH_LONG).show();
         } else {
-            MainActivity.wantedAvailablePidsHex = getWantedAvailablePidsHex();
+            MainActivity.wantedAvailableParametersHex = getWantedAvailableParametersHex();
         }
     }
 
     private int getNumCheckBoxesChecked() {
         int numCheckBoxesChecked = 0;
-        for (int c=0; c<commandCheckBoxIds.length; c++) {
-            CheckBox checkBox = findViewById(commandCheckBoxIds[c]);
+        for (int c = 0; c< parameterCheckBoxIds.length; c++) {
+            CheckBox checkBox = findViewById(parameterCheckBoxIds[c]);
             if (checkBox.isChecked()) {
                 numCheckBoxesChecked++;
             }
@@ -134,18 +135,18 @@ public class PidsActivity extends Obd2Activity {
         return numCheckBoxesChecked;
     }
 
-    private String getWantedAvailablePidsHex(){
-        StringBuilder wantedAvailablePidsBytesStringBuilder = new StringBuilder();
-        for (int c=0; c<commandCheckBoxIds.length; c++) {
-            CheckBox checkBox = findViewById(commandCheckBoxIds[c]);
+    private String getWantedAvailableParametersHex(){
+        StringBuilder wantedAvailableParametersHexStringBuilder = new StringBuilder();
+        for (int c = 0; c< parameterCheckBoxIds.length; c++) {
+            CheckBox checkBox = findViewById(parameterCheckBoxIds[c]);
             if (checkBox.isChecked()) {
                 String checkBoxPidHex = checkBox.getText().toString().substring(0, 2);
-                wantedAvailablePidsBytesStringBuilder.append(checkBoxPidHex);
-                wantedAvailablePidsBytesStringBuilder.append(" ");
+                wantedAvailableParametersHexStringBuilder.append(checkBoxPidHex);
+                wantedAvailableParametersHexStringBuilder.append(" ");
             }
         }
-        String wantedAvailablePidsBytes = wantedAvailablePidsBytesStringBuilder.toString();
-        return wantedAvailablePidsBytes;
+        String wantedAvailableParametersHex = wantedAvailableParametersHexStringBuilder.toString();
+        return wantedAvailableParametersHex;
     }
 
     private class Obd2AvailablePidsTask extends Obd2AsyncTask {
@@ -162,6 +163,7 @@ public class PidsActivity extends Obd2Activity {
             try {
                 initializeObd2();//REMOCK BY COMMENTING
                 runAvailablePidsCommands();
+                deinitializeObd2();//REMOCK BY COMMENTING
             } catch (Exception e) {
                 publishProgress(new Pair<Integer, String>(R.id.statusTextView, e.getMessage()));
                 Log.e("example.app", e.getMessage());

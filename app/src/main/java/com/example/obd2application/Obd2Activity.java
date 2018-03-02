@@ -1,5 +1,6 @@
 package com.example.obd2application;
 
+import android.bluetooth.BluetoothDevice;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Pair;
 import android.view.View;
@@ -9,11 +10,17 @@ import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 
+import java.util.UUID;
+
 /**
  * Created by linkk on 2/6/2018.
  */
 
-public class Obd2Activity extends AppCompatActivity {
+public abstract class Obd2Activity extends AppCompatActivity {
+
+    public static boolean usingBluetoothConnection;
+    public static BluetoothDevice connectedBlueToothDevice;
+    public static UUID uuid;
 
     public void updateProgress(Pair<Integer, String>... values) {
         for (int v=0; v<values.length; v++) {
@@ -36,7 +43,7 @@ public class Obd2Activity extends AppCompatActivity {
                     }
                     lineGraphSeries.appendData(new DataPoint(currentTimeSeconds, Double.valueOf(values[v].second)), true, 21);
                     graphView.getViewport().setMaxX(currentTimeSeconds);
-                    graphView.getViewport().setMinX(currentTimeSeconds - 42);
+                    graphView.getViewport().setMinX(currentTimeSeconds - 40);
 //                    graphView.removeAllSeries();
 //                    graphView.addSeries(lineGraphSeries);
                 }
