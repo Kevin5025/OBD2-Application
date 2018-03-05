@@ -19,11 +19,23 @@ import android.widget.Toast;
 
 import com.github.pires.obd.commands.ObdCommand;
 import com.github.pires.obd.commands.SpeedCommand;
+import com.github.pires.obd.commands.control.DistanceSinceCCCommand;
+import com.github.pires.obd.commands.control.EquivalentRatioCommand;
+import com.github.pires.obd.commands.control.ModuleVoltageCommand;
+import com.github.pires.obd.commands.control.TimingAdvanceCommand;
+import com.github.pires.obd.commands.engine.AbsoluteLoadCommand;
 import com.github.pires.obd.commands.engine.LoadCommand;
 import com.github.pires.obd.commands.engine.MassAirFlowCommand;
 import com.github.pires.obd.commands.engine.RPMCommand;
+import com.github.pires.obd.commands.engine.RuntimeCommand;
+import com.github.pires.obd.commands.engine.ThrottlePositionCommand;
+import com.github.pires.obd.commands.fuel.AirFuelRatioCommand;
 import com.github.pires.obd.commands.fuel.ConsumptionRateCommand;
 import com.github.pires.obd.commands.fuel.FuelLevelCommand;
+import com.github.pires.obd.commands.fuel.FuelTrimCommand;
+import com.github.pires.obd.commands.pressure.BarometricPressureCommand;
+import com.github.pires.obd.commands.pressure.FuelPressureCommand;
+import com.github.pires.obd.commands.pressure.FuelRailPressureCommand;
 import com.github.pires.obd.commands.pressure.IntakeManifoldPressureCommand;
 import com.github.pires.obd.commands.temperature.AirIntakeTemperatureCommand;
 import com.github.pires.obd.commands.temperature.AmbientAirTemperatureCommand;
@@ -79,6 +91,7 @@ public class MainActivity extends Obd2Activity {
 
         usingBluetoothConnection = false;
         connectedBlueToothDevice = null;
+        Toast.makeText(this, "Using WiFi Connection", Toast.LENGTH_SHORT).show();
         uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     }
 
@@ -148,18 +161,40 @@ public class MainActivity extends Obd2Activity {
         pidCommands[4] = new LoadCommand();
         pidNames[5] = "05: Engine Coolant Temperature";
         pidCommands[5] = new EngineCoolantTemperatureCommand();
+        pidNames[6] = "06: Short Term Fuel Trim - Bank 1";
+        pidCommands[6] = new FuelTrimCommand();
+        pidNames[10] = "0A: Fuel Pressure";
+        pidCommands[10] = new FuelPressureCommand();
         pidNames[11] = "0B: Intake Manifold Absolute Pressure";
         pidCommands[11] = new IntakeManifoldPressureCommand();
         pidNames[12] = "0C: Engine Rpm";
         pidCommands[12] = new RPMCommand();
         pidNames[13] = "0D: Vehicle Speed";
         pidCommands[13] = new SpeedCommand();
+        pidNames[14] = "0E: Timing Advance";
+        pidCommands[14] = new TimingAdvanceCommand();
         pidNames[15] = "0F: Intake Air Temperature";
         pidCommands[15] = new AirIntakeTemperatureCommand();
         pidNames[16] = "10: Air Flow Rate";
         pidCommands[16] = new MassAirFlowCommand();
+        pidNames[17] = "11: Throttle Position";
+        pidCommands[17] = new ThrottlePositionCommand();
+        pidNames[31] = "1F: Run Time Since Engine Start";
+        pidCommands[31] = new RuntimeCommand();;
+        pidNames[35] = "23: Fuel Rail Gauge Pressure";
+        pidCommands[35] = new FuelRailPressureCommand();
         pidNames[47] = "2F: Fuel Tank Input Level";
         pidCommands[47] = new FuelLevelCommand();
+        pidNames[49] = "31: Distance Traveled Since Codes Cleared";
+        pidCommands[49] = new DistanceSinceCCCommand();
+        pidNames[51] = "33: Absolute Barometric Pressure";
+        pidCommands[51] = new BarometricPressureCommand();
+        pidNames[66] = "42: Control Module Voltage";
+        pidCommands[66] = new ModuleVoltageCommand();
+        pidNames[67] = "43: Absolute Load Value";
+        pidCommands[67] = new AbsoluteLoadCommand();
+        pidNames[68] = "44: Fuel-Air Commanded Equivalence Ratio";
+        pidCommands[68] = new AirFuelRatioCommand();//pidCommands[68] = new EquivalentRatioCommand();
         pidNames[70] = "46: Ambient Air Temperature";
         pidCommands[70] = new AmbientAirTemperatureCommand();
         pidNames[94] = "5E: Engine Fuel Rate";
@@ -302,7 +337,7 @@ public class MainActivity extends Obd2Activity {
                     memoizedPidCommandResults = new String[256];
 
                     String[] wantedAvailablePidsHexArray = MainActivity.wantedAvailableParametersHex.split(" ");
-                    for (int wp=0; wp<wantedAvailablePidsHexArray.length; wp++) {//TODO extract method from for loop
+                    for (int wp=0; wp<wantedAvailablePidsHexArray.length; wp++) {
                         String parameterUnitlessResult = getParameterHexUnitlessResult(wantedAvailablePidsHexArray[wp], parameterValueTextViewIdArray[wp]);//REMOCK BY COMMENTING
                         publishProgress(new Pair<Integer, String>(parameterGraphViewIdArray[wp], parameterUnitlessResult));
                     }
@@ -353,7 +388,7 @@ public class MainActivity extends Obd2Activity {
 
         private String getPidDecCommandUnitlessResult(int pidDec, Integer commandValueTextViewId) {
             String commandResult = getMemoizedPidDecCommandResult(pidDec, commandValueTextViewId);
-            String commandUnitlessResult = commandResult.replaceAll("[^\\d.]", "");//TODO memoize write
+            String commandUnitlessResult = commandResult.replaceAll("[^\\d.]", "");
             return commandUnitlessResult;
         }
 

@@ -112,6 +112,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
+            <!--EVERY NEW PARAMETER TODO-->
+
             <CheckBox
                 android:id="@+id/calculatedEngineLoadCheckBox"
                 android:layout_width="match_parent"
@@ -128,12 +130,28 @@
                 app:layout_constraintTop_toBottomOf="@+id/calculatedEngineLoadCheckBox" />
 
             <CheckBox
+                android:id="@+id/shortTermFuelTrimBank1CheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onParameterCheckBoxClick"
+                android:text="06: Short Term Fuel Trim - Bank 1"
+                app:layout_constraintTop_toBottomOf="@+id/engineCoolantTemperatureCheckBox" />
+
+            <CheckBox
+                android:id="@+id/fuelPressureCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onParameterCheckBoxClick"
+                android:text="0A: Fuel Pressure"
+                app:layout_constraintTop_toBottomOf="@+id/shortTermFuelTrimBank1CheckBox" />
+
+            <CheckBox
                 android:id="@+id/intakeManifoldAbsolutePressureCheckBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:onClick="onParameterCheckBoxClick"
                 android:text="0B: Intake Manifold Absolute Pressure"
-                app:layout_constraintTop_toBottomOf="@+id/engineCoolantTemperatureCheckBox" />
+                app:layout_constraintTop_toBottomOf="@+id/fuelPressureCheckBox" />
 
             <CheckBox
                 android:id="@+id/engineRpmCheckBox"
@@ -152,12 +170,20 @@
                 app:layout_constraintTop_toBottomOf="@+id/engineRpmCheckBox" />
 
             <CheckBox
+                android:id="@+id/timingAdvanceCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onParameterCheckBoxClick"
+                android:text="0E: Timing Advance"
+                app:layout_constraintTop_toBottomOf="@+id/vehicleSpeedCheckBox" />
+
+            <CheckBox
                 android:id="@+id/intakeAirTemperatureCheckBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:onClick="onParameterCheckBoxClick"
                 android:text="0F: Intake Air Temperature"
-                app:layout_constraintTop_toBottomOf="@+id/vehicleSpeedCheckBox" />
+                app:layout_constraintTop_toBottomOf="@+id/timingAdvanceCheckBox" />
 
             <CheckBox
                 android:id="@+id/airFlowRateCheckBox"
@@ -168,12 +194,76 @@
                 app:layout_constraintTop_toBottomOf="@+id/intakeAirTemperatureCheckBox" />
 
             <CheckBox
+                android:id="@+id/throttlePositionCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onParameterCheckBoxClick"
+                android:text="11: Throttle Position"
+                app:layout_constraintTop_toBottomOf="@+id/airFlowRateCheckBox" />
+
+            <CheckBox
+                android:id="@+id/runTimeSinceEngineStartCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onParameterCheckBoxClick"
+                android:text="1F: Run Time Since Engine Start"
+                app:layout_constraintTop_toBottomOf="@+id/throttlePositionCheckBox" />
+
+            <CheckBox
+                android:id="@+id/fuelRailGaugePressureCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onParameterCheckBoxClick"
+                android:text="23: Fuel Rail Gauge Pressure"
+                app:layout_constraintTop_toBottomOf="@+id/runTimeSinceEngineStartCheckBox" />
+
+            <CheckBox
                 android:id="@+id/fuelTankInputLevelCheckBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:onClick="onParameterCheckBoxClick"
                 android:text="2F: Fuel Tank Input Level"
-                app:layout_constraintTop_toBottomOf="@+id/airFlowRateCheckBox" />
+                app:layout_constraintTop_toBottomOf="@+id/fuelRailGaugePressureCheckBox" />
+
+            <CheckBox
+                android:id="@+id/distanceTraveledSinceCodesClearedCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onParameterCheckBoxClick"
+                android:text="31: Distance Traveled Since Codes Cleared"
+                app:layout_constraintTop_toBottomOf="@+id/fuelTankInputLevelCheckBox" />
+
+            <CheckBox
+                android:id="@+id/absoluteBarometricPressureCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onParameterCheckBoxClick"
+                android:text="33: Absolute Barometric Pressure"
+                app:layout_constraintTop_toBottomOf="@+id/distanceTraveledSinceCodesClearedCheckBox" />
+
+            <CheckBox
+                android:id="@+id/controlModuleVoltageCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onParameterCheckBoxClick"
+                android:text="42: Control Module Voltage"
+                app:layout_constraintTop_toBottomOf="@+id/absoluteBarometricPressureCheckBox" />
+
+            <CheckBox
+                android:id="@+id/absoluteLoadValueCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onParameterCheckBoxClick"
+                android:text="43: Absolute Load Value"
+                app:layout_constraintTop_toBottomOf="@+id/controlModuleVoltageCheckBox" />
+
+            <CheckBox
+                android:id="@+id/fuelAirCommandedEquivalenceRatioCheckBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:onClick="onParameterCheckBoxClick"
+                android:text="44: Fuel-Air Commanded Equivalence Ratio"
+                app:layout_constraintTop_toBottomOf="@+id/absoluteLoadValueCheckBox" />
 
             <CheckBox
                 android:id="@+id/ambientAirTemperatureCheckBox"
@@ -181,7 +271,7 @@
                 android:layout_height="wrap_content"
                 android:onClick="onParameterCheckBoxClick"
                 android:text="46: Ambient Air Temperature"
-                app:layout_constraintTop_toBottomOf="@+id/fuelTankInputLevelCheckBox" />
+                app:layout_constraintTop_toBottomOf="@+id/fuelAirCommandedEquivalenceRatioCheckBox" />
 
             <CheckBox
                 android:id="@+id/engineFuelRateCheckBox"
