@@ -215,7 +215,7 @@ public class PidsActivity extends Obd2Activity {
             MainActivity.allAvailablePidsHexResult = new String[8];
             for (int b=0; b<availablePidsCommands.length; b++) {
                 String obdCommandResults = runCommand(availablePidsCommands[b], pidsSupportedValueTextViewIds[b]);
-                //String obdCommandResults = "0000AAAAAAAA";//REMOCK BY COMMENTING
+                //String obdCommandResults = "0000AAAAAAAA";//REMOCK BY UNCOMMENTING AND COMMENTING ABOVE LINE
                 BigInteger availablePids = getAvailablePids(obdCommandResults);
 
                 String availablePidsBinary = availablePids.toString(2);
