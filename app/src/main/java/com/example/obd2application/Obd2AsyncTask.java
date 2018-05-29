@@ -51,6 +51,12 @@ public abstract class Obd2AsyncTask extends AsyncTask<String, Pair<Integer, Stri
         obd2Activity.updateProgress(values);
     }
 
+    /**
+     * handles the wifi/bluetooth stuff that the async task communicates through
+     * also initializes the connection with the obd2 adapter
+     * turning echo off causes the results to be in a format that the pires obd api handles
+     * @throws IOException
+     */
     protected void initializeObd2() throws IOException {
         if (Obd2Activity.usingBluetoothConnection) {
             publishProgress(new Pair<Integer, String>(R.id.statusTextView, "Connecting to BlueTooth socket"));
@@ -83,6 +89,12 @@ public abstract class Obd2AsyncTask extends AsyncTask<String, Pair<Integer, Stri
         }
     }
 
+    /**
+     * runs the command while informing the user that the command is running via the status text view
+     * @param obdCommand
+     * @param valueTextViewId
+     * @return
+     */
     protected String runCommand(ObdCommand obdCommand, Integer valueTextViewId) {
         String obdCommandFormattedResult;
         try {
