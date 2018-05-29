@@ -53,35 +53,40 @@ public class MainActivity extends Obd2Activity {
     Obd2StreamTask obd2StreamTask;
     boolean isToggleButtonOn;
 
-    public static boolean isKnownAllAvailablePids;
-    public static String wantedAvailableParametersHex;//each character is a byte indicating which PID from 0 to 255 is desired
-    public static String allAvailablePidsBinary;//includes PID 00
-    public static String[] allAvailablePidsHexResult;//excludes PID 00
-//    public static final String ALL_AVAILABLE_PIDS_BINARY_KEY = "com.example.obd2application.ALL_AVAILABLE_PIDS_BINARY_KEY";
+    public static boolean isKnownAllAvailablePids;//once we launch the PIDs activity, we will ask the vehicle which PIDs are available
+    public static String wantedAvailableParametersHex;//each unit (of this string) (e.g. 04 or Z1) is a byte (two hexadecimals 16^2=256) indicating which PID (from 0 to 255) is desired. Thus, this string indicates all of the PIDs that the user checkmarked on the PIDs page.
+    public static String allAvailablePidsBinary;//includes PID 00, which is always available in every obd2 vehicle. Thus, the 0th character of this string will be a "1", meaning that PID00 is available. If the 3rd character is a "0", then PID03 is unavailable. If the string is length of 30, then PID31 (also any PID >31) is unavailable.
+    public static String[] allAvailablePidsHexResult;//excludes PID 00; Array of 8 strings, each of length 8; Each character is a hexadecimal, which expresses 4 bits. Thus, 8*8*4 bits are expressed. This allAvailablePidsHexResult expresses the same thing as allAvailablePidsBinary, but in a different form.
+//    public static final String ALL_AVAILABLE_PIDS_BINARY_KEY = "com.example.obd2application.ALL_AVAILABLE_PIDS_BINARY_KEY";//I used these to communicate across activities, but I found it easier to just use public static variables, so I don't use these anymore.
 //    public static final String ALL_AVAILABLE_PIDS_HEX_RESULT_KEY = "com.example.obd2application.ALL_AVAILABLE_PIDS_HEX_RESULT_KEY";
     public static final int PIDS_ACTIVITY_REQUEST_CODE = 1;
 
-    public static TextView[] parameterTextViewArray;//8 views
-    int[] parameterValueTextViewIdArray;
-    public static GraphView[] parameterGraphViewArray;//8 views
-    int[] parameterGraphViewIdArray;
-    LineGraphSeries<DataPoint>[] parameterLineGraphSeriesArray;
+    public static TextView[] parameterTextViewArray;//8 views; these are the 8 graph labels to the upperleft of each graph
+    int[] parameterValueTextViewIdArray;//these are the ids of the 8 labels to the upperright of each graph; these labels tell you the exact value most recently added to the graph
+    public static GraphView[] parameterGraphViewArray;//8 views; these are the 8 graphs
+    int[] parameterGraphViewIdArray;//these are the ids of the 8 graph views
+    LineGraphSeries<DataPoint>[] parameterLineGraphSeriesArray;//each graph view needs a line graph series; see 'com.jjoe64:graphview:4.2.1'
 
-    String[] customParameterNames;
-    String[] pidNames;
-    ObdCommand[] pidCommands;
-    String[] memoizedPidCommandResults;
+    String[] customParameterNames;//parameters that we calculate ourselves using the standard parameters of the obd2 protocol
+    String[] pidNames;//mapping the PID ID (index in decimal) to the name of that (mode 01) parameter expressed here: https://en.wikipedia.org/wiki/OBD-II_PIDs
+    ObdCommand[] pidCommands;//mapping the PID ID (index in decimal) to the pires.obd API copied in from here: https://github.com/Kevin5025/obd-java-api
+    String[] memoizedPidCommandResults;//multiple custom parameters may rely on the same standard PIDs
 
+    /**
+     * This runs whenever the Main Activity starts, such as when the app starts. I think you can set which Activity that the app starts with in the AncdroidManifest.xml file?
+     * This just initializes things such as defaults and such as buttons. The app does not do anything else until you click one of the buttons or options in the options menu.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceState);//hiddenly defined in AppCompatActivity I think
         setContentView(R.layout.activity_main);
         obd2StreamTask = null;
         isToggleButtonOn = false;
         findViewById(R.id.toggleButton).setEnabled(false);//disabled until available PIDs are known
 
         isKnownAllAvailablePids = false;
-        wantedAvailableParametersHex = "04 05 0C 0D 2F Z0 Z1";
+        wantedAvailableParametersHex = "04 05 0C 0D 2F Z0 Z1";//just a default
         allAvailablePidsBinary = "1";//because PID 00 is always available
         allAvailablePidsHexResult = new String[8];
 
@@ -92,9 +97,12 @@ public class MainActivity extends Obd2Activity {
         usingBluetoothConnection = false;
         connectedBlueToothDevice = null;
         Toast.makeText(this, "Using WiFi Connection", Toast.LENGTH_SHORT).show();
-        uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+        uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");//used for Bluetooth; you should lookup this string "00001101-0000-1000-8000-00805F9B34FB"
     }
 
+    /**
+     * Gets me convenient access to the 8 graphs/labels
+     */
     private void initializeViewArrays() {
         parameterTextViewArray = new TextView[] {
                 findViewById(R.id.parameterTextView0),
@@ -152,6 +160,9 @@ public class MainActivity extends Obd2Activity {
         }
     }
 
+    /**
+     * Gives me convenient access to each PID's name and API command
+     */
     private void initializePidMaps() {//EVERY NEW PARAMETER TODO
         customParameterNames = new String[2];
         pidNames = new String[256];
@@ -216,6 +227,12 @@ public class MainActivity extends Obd2Activity {
         return true;
     }
 
+    /**
+     * Right now, the only menu option is to toggle between attempting a WiFi or BlueTooth connection with an obd2 device.
+     * The phone should be connected to the OBD2 device's WiFi network or BlueTooth pairing.
+     * @param menuItem
+     * @return
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         switch (menuItem.getItemId()) {
@@ -234,6 +251,12 @@ public class MainActivity extends Obd2Activity {
         }
     }
 
+    /**
+     * You should pair your phone to the BlueTooth device (the BlueTooth OBD2 adaptor) before hand.
+     * This function will let the user choose a BlueTooth device out of all the BlueTooth devices that your phone has paired with before in its history.
+     * The user should choose the appropriate option for the OBD2 adaptor
+     * The user chooses the device from a dialog that pops up
+     */
     private void chooseBondedBluetoothDevice() {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         Set<BluetoothDevice> bondedBluetoothDeviceSet = bluetoothAdapter.getBondedDevices();
@@ -260,21 +283,31 @@ public class MainActivity extends Obd2Activity {
 //        setTextViewToWanted();
 //    }
 
+    /**
+     * onPidsButtonClick() calls startActivityForResult(intent, PIDS_ACTIVITY_REQUEST_CODE)\
+     * once the user exits the PIDs screen and returns to the MainActivity, this function (onActivityResult) is called
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch(requestCode) {
             case (PIDS_ACTIVITY_REQUEST_CODE) : {
                 if (resultCode == Activity.RESULT_OK || isKnownAllAvailablePids) {
-                    //this.wantedAvailableParametersHex = data.getStringExtra("WantedAvailablePidsBytes");
-                    findViewById(R.id.toggleButton).setEnabled(true);//now available PIDs are known
-                    setTextViewToWanted();
+                    //this.wantedAvailableParametersHex = data.getStringExtra("WantedAvailablePidsBytes");//I switched to just using public static variables
+                    findViewById(R.id.toggleButton).setEnabled(true);//now available PIDs are known, so we can toggle the data streaming on
+                    setTextViewToWanted();//switches the labels to the parameters that the user wants, as indicated by which checkboxes the user marked in the PIDs screen
                 }
                 break;
             }
         }
     }
 
+    /**
+     * switches the labels to the parameters that the user wants, as indicated by which checkboxes the user marked in the PIDs screen
+     */
     private void setTextViewToWanted() {
         for (int tv = 0; tv< parameterTextViewArray.length; tv++) {
             parameterTextViewArray[tv].setText("NONE");
@@ -291,6 +324,10 @@ public class MainActivity extends Obd2Activity {
         }
     }
 
+    /**
+     * goes to the PIDs screen
+     * @param view
+     */
     public void onPidsButtonClick(View view) {
         Intent intent = new Intent(this, PidsActivity.class);
 //        intent.putExtra(ALL_AVAILABLE_PIDS_BINARY_KEY, allAvailablePidsBinary);
@@ -298,6 +335,10 @@ public class MainActivity extends Obd2Activity {
         startActivityForResult(intent, PIDS_ACTIVITY_REQUEST_CODE);
     }
 
+    /**
+     * toggles whether the app will continously ask the OBD2 device for data about the vehicle
+     * @param view
+     */
     public void onToggleButtonClick(View view) {
         isToggleButtonOn = !isToggleButtonOn;
         if (isToggleButtonOn) {
@@ -311,6 +352,10 @@ public class MainActivity extends Obd2Activity {
         }
     }
 
+    /**
+     * displays some text on the screen to help me know what's going on when programming
+     * @param view
+     */
     public void onDebugButtonClick(View view) {
         updateProgress(new Pair<Integer, String>(R.id.debugTextView, this.wantedAvailableParametersHex));
         //updateProgress(new Pair<Integer, String>(R.id.debugTextView, allAvailablePidsBinary));
@@ -326,6 +371,11 @@ public class MainActivity extends Obd2Activity {
             this.mainActivity = mainActivity;
         }
 
+        /**
+         * continuously asks the obd2 adaptor for data every two seconds (or every whatever scanPeriodMillis is set to)
+         * @param strings
+         * @return
+         */
         @Override
         protected String doInBackground(String... strings) {
             try {
@@ -350,6 +400,12 @@ public class MainActivity extends Obd2Activity {
             return null;
         }
 
+        /**
+         *
+         * @param parameterHex PID or custom parameter ID desired
+         * @param parameterValueTextViewId id of textview to output the parameter result
+         * @return the parameter result
+         */
         private String getParameterHexUnitlessResult(String parameterHex, int parameterValueTextViewId) {
             String parameterResult = "123M";//MOCK
             String parameterUnitlessResult = "123";//MOCK
@@ -392,6 +448,7 @@ public class MainActivity extends Obd2Activity {
             return commandUnitlessResult;
         }
 
+        //if memoized, use memoized value, otherwise run the command to get the value from the obd2 adapter
         private String getMemoizedPidDecCommandResult(int pidDec, Integer commandValueTextViewId) {
             if (memoizedPidCommandResults[pidDec] == null) {
                 memoizedPidCommandResults[pidDec] = runCommand(pidCommands[pidDec], commandValueTextViewId);
@@ -400,6 +457,10 @@ public class MainActivity extends Obd2Activity {
         }
     }
 
+    /**
+     * @param pidHex
+     * @return whether the vehicle supports this PID, assuming we have launched the PIDs activity to check already
+     */
     public static boolean isAvailablePidHex(String pidHex) {
         int pidDec = Integer.parseInt(pidHex, 16);
         boolean isAvailablePidHex = pidDec < MainActivity.allAvailablePidsBinary.length() && MainActivity.allAvailablePidsBinary.charAt(pidDec) == '1';

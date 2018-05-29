@@ -16,6 +16,9 @@ import java.math.BigInteger;
 
 public class PidsActivity extends Obd2Activity {
 
+    /**
+     * these are the 8 "00000000" textview lines in the PID screen
+     */
     Integer[] pidsSupportedValueTextViewIds = new Integer[] {
             R.id.pidsSupported_01_20_ValueTextView,
             R.id.pidsSupported_21_40_ValueTextView,
@@ -63,6 +66,9 @@ public class PidsActivity extends Obd2Activity {
 //        String allAvailablePidsBinary = intent.getStringExtra(MainActivity.ALL_AVAILABLE_PIDS_BINARY_KEY);
 //        String[] allAvailablePidsHexResult = intent.getStringArrayExtra(MainActivity.ALL_AVAILABLE_PIDS_HEX_RESULT_KEY);
 
+        /**
+         * only runs the obd2AvailablePidsTask if we don't already know the available pids
+         */
         if (!MainActivity.isKnownAllAvailablePids) {
             Obd2AvailablePidsTask obd2AvailablePidsTask = new Obd2AvailablePidsTask(this);
             obd2AvailablePidsTask.execute();
@@ -81,6 +87,9 @@ public class PidsActivity extends Obd2Activity {
         }
     }
 
+    /**
+     * Checks the boxes that were checked last time or the default if this is the first time.
+     */
     private void initializeCheckBoxes() {
         StringBuilder wantedAvailablePidsHexStringBuilder = new StringBuilder();
         String[] wantedAvailablePidsHexArray = MainActivity.wantedAvailableParametersHex.split(" ");
@@ -182,6 +191,11 @@ public class PidsActivity extends Obd2Activity {
             return null;
         }
 
+        /**
+         * runs the up to 8 commands to check which pids are available in this vehicle
+         * stores the pid availability into MainActivity.allAvailablePidsBinary and MainActivity.allAvailablePidsHexResult
+         * @throws InterruptedException
+         */
         private void runAvailablePidsCommands() throws InterruptedException {
             ObdCommand[] availablePidsCommands = new ObdCommand[] {
                     //new AvailablePidsCommand_01_20(),
